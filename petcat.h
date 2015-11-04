@@ -2,7 +2,7 @@
 /*** petcat.h: general definitions for offline preproc/decomp */
 
 #include <stdio.h>
-#include "diagcnt.h" 
+#include "diagcnt.h"
 
 #define TOT_SEGS 36
 #define MEAS_SEGS 37
@@ -131,7 +131,7 @@ struct decomp_state {
   Event_Signal *bsig;
   Interaction  *ints;
   int   cnt;
-  float coal_dist;	
+  float coal_dist;
   struct decomp_errcnt *err;
   /* next two are for diagnostic output */
   struct crys_intpts pos;
@@ -181,7 +181,7 @@ int           grid_pos_lu[SSEG][MAX_SRAD][MAX_SPHI][MAX_SZZZ];    /* basis-grid 
 int           maxir[SSEG], maxip[SSEG], maxiz[SSEG];  /* max. values of ir, ip, iz for each segment */
 Adaptive_Grid ags1[SSEG];             /* Adaptive Grid Search coarse grid, 1 segment */
 int           quiet;                  /* set to 1 to prevent output of diagnostic info */
-int           average_sigs;           /* set to 1 to output averaged observed and 
+int           average_sigs;           /* set to 1 to output averaged observed and
 						fitted signals for single-segment (net=1) events */
 int           *bad_segs;              /* list of segment numbers that should be disabled */
 
@@ -246,6 +246,8 @@ int sendLogMsg(char *from, char *what);
 /* mode 2 logging routines */
 void log2intpts(struct crys_intpts *a);
 void logintpt(float x, float y, float z, float e, FILE *flog);
+void logMsg(int verboseFlag, const char *fmt, ...);
+void errMsg(const char *fmt, ...);
 
 /* routines to support one interaction search */
 void numGridPts(int stride);

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     filterFile[80], trGainFile[80], xTalkParsFile[80], s[80];
   struct gebData gh;  /* global header output with mode 2 data */
   Mario *mario;
-  int verboseFlag;
+  int verboseFlag = 0;
   char ch;
 
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
@@ -59,30 +59,23 @@ int main(int argc, char **argv) {
     }
   }
 
+  logMsg(verboseFlag, "the number is %d", 42);
+
   outsideX = 0;
 
   gotsignal = 0;
   signal(SIGINT, breakhandler);
 
-  for (i = 0; i < 4096; i++) {
-    h[i] = 0;
-  }
+  for (i = 0; i < 4096; i++) { h[i] = 0; }
 
-  printf("sizeof(event signal) = %lu\n", sizeof(Event_Signal));
-  printf("sizeof(struct crys_intpts) = %lu\n", sizeof(struct crys_intpts));
-  fflush(stdout);
-  fflush(stderr);
   cnt = Calloc(sizeof(mode3Cnt), 1);
   pcnt = Calloc(sizeof(preprocCnt), 1);
   postCnt = Calloc(sizeof(postprocCnt), 1);
   mario = Calloc(sizeof(Mario), 1);
   pcnt->ener_cc = lh_init("ener_cc", 16384);
 
-  printf("initializing postCnt\n"); fflush(stdout);
-
   initializePostCnt(postCnt);
-
-  printf("initialized postCnt\n"); fflush(stdout);
+  logMsg(verboseFlag, "initialized postCnt\n");
 
   fcfg = fopen("petcat.cfg", "r");
   assert(fcfg != 0);
@@ -96,8 +89,8 @@ int main(int argc, char **argv) {
   fscanf(fcfg, "%s %s", s, xTalkParsFile);
   fclose(fcfg);
 
-  printf("holenum = %d, xtalnum = %d\n", holenum, xtalnum);
-  printf("inputFile = %s, basisFile = %s\n", inputFile, basisFile);
+  logMsg(verboseFlag, "holenum = %d, xtalnum = %d\n", holenum, xtalnum);
+  logMsg(verboseFlag,"inputFile = %s, basisFile = %s\n", inputFile, basisFile);
 
   /* Check ending of filename to decide if it's compressed or not.
      Compressed files are read in using the pipe (popen) method.

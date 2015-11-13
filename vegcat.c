@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   postprocCnt postCnt;
   int holenum, xtalnum;
   char ch;
-  int verboseFlag, stat, numhdr = 0, numevt = 0, num;
+  int verboseFlag, stat, numhdr = 0, numevt = 0, num, i;
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"filename", required_argument, 0, 'f'},
                           { 0, 0, 0, 0}};
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 
   fin = fopen(inputFile, "r");
   if (fin == 0) { fprintf(stderr, "could not open file %s\n", inputFile); exit(1);}
-  fou = fopen("out.dat", "w");
+  fou = fopen("out.csv", "w");
 
   stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
            cfg.xTalkParsName);
@@ -49,6 +49,8 @@ int main(int argc, char **argv) {
 
   ghdr2.type = 1;
   ghdr2.length = sizeof(struct crys_intpts);
+
+  fprintf(fou, "evt, int, seg, x, y, z, e\n");
 
   while (fread(&ghdr1, sizeof(struct gebData), 1, fin) == 1) {
     numhdr++;
@@ -62,11 +64,17 @@ int main(int argc, char **argv) {
       x->crystal_id = cfg.holenum * 4 + cfg.xtalnum; /* HLC -- Set crystal_id properly
 					      so later rotations, etc.
 					      make sense. */
+      for (i = 0; i < x->num; i++) {
+        fprintf(fou, "%d, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f\n", numevt, i + 1,
+          x->intpts[i].seg, x->intpts[i].x, x->intpts[i].y, x->intpts[i].z, x->intpts[i].e);
+      }
+      /*
       ghdr2.timestamp = x->timestamp;
       num = fwrite(&ghdr2, sizeof(struct gebData), 1, fou);
       assert(num == 1);
       num = fwrite(x, sizeof(struct crys_intpts), 1, fou);
       assert(num == 1);
+      */
     }
     else {
       fseek(fin, ghdr1.length, SEEK_CUR);

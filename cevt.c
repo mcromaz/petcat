@@ -12,20 +12,21 @@ struct evtList {
   int seg;
   Mario *rawEvts;
   int numEvts;
-} runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
-                {"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
+} runList[2] = {{"../coinc-data/WFOUT-Run0126Segment15.dat", 15, 0, 0},
+                {"../coinc-data/WFOUT-Run0126Segment9.dat", 9, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},
-                        {"none", 15, 0, 1},
+                        {"none", 9, 0, 1},
                         {"none", -1, 0, 1}};
 
 float scratch[37][300];
 
 
-Mario *avg(struct evtList *x) {
+Mario *avg(struct evtList *x, int baselineFlag) {
 
   struct evtList *y;
   Mario *avgEvt, *evt;
+  float avg;
   int i, j, k;
 
   avgEvt = calloc(1, sizeof(Mario));
@@ -40,24 +41,37 @@ Mario *avg(struct evtList *x) {
     }
   }
 
-   for (j = 0; j < 37; j++) {
-     for (k = 0; k < 300; k++) {
-       scratch[j][k] /= (float) x->numEvts;
-       avgEvt->wf[j][k] = (short) scratch[j][k];
-     }
-   }
+  if (baselineFlag != 0) {
+    for (i = 0; i < 37; i++) {
+      avg = 0.;
+      for (j = 0; j < 30; j++) {
+        avg += scratch[i][j];
+      }
+      avg /= 30.;
+      for (j = 0; j < 300; j++) {
+        scratch[i][j] -= avg;
+      }
+    }
+  }
 
-   for (i = 0; i < x->numEvts; i++) {
-     evt = x->rawEvts;
-     avgEvt->ccEnergy += evt->ccEnergy;
-     for (j = 0; j < 36; j++) {
+  for (j = 0; j < 37; j++) {
+    for (k = 0; k < 300; k++) {
+      scratch[j][k] /= (float) x->numEvts;
+      avgEvt->wf[j][k] = (short) scratch[j][k];
+    }
+  }
+
+  for (i = 0; i < x->numEvts; i++) {
+    evt = x->rawEvts;
+    avgEvt->ccEnergy += evt->ccEnergy;
+    for (j = 0; j < 36; j++) {
        avgEvt->segEnergy[j] += evt->segEnergy[j];
-     }
-   }
-   avgEvt->ccEnergy /= (float) x->numEvts;
-   for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
+    }
+  }
+  avgEvt->ccEnergy /= (float) x->numEvts;
+  for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
 
-   return avgEvt;
+  return avgEvt;
 }
 
 int main(int argc, char **argv) {
@@ -66,7 +80,7 @@ int main(int argc, char **argv) {
   struct gebData ghdr, defaulthdr = {100, sizeof(Mario), 0ll};
   Mario *evt;
   char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd'};
-  int i, j, k, num, seg;
+  int i, j, k, num, seg, baselineFlag = 1;
 
   for (i = 0; i < 2; i++) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
@@ -87,8 +101,8 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  pList[0].rawEvts = avg(runList + 0);
-  pList[1].rawEvts = avg(runList + 1);
+  pList[0].rawEvts = avg(runList + 0, baselineFlag);
+  pList[1].rawEvts = avg(runList + 1, baselineFlag);
 
   fou = fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}

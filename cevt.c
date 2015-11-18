@@ -17,10 +17,34 @@ struct evtList {
 
 struct evtList pList[] = {{"none", 15, 0, 1},
                         {"none", 9, 0, 1},
-                        {"none", -1, 0, 1}};
+                        {"none", 15, 0, 1}};  // fake it
 
 float scratch[37][300];
 
+
+Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
+
+  Mario *wevt;
+  float s0, s1;
+  int i, j;
+
+  wevt = calloc(1, sizeof(Mario));
+
+  for (i = 0; i < 37; i++) {
+    for (j = 0; j < 300; j++) {
+      s0 = (float)evt0->wf[i][j];
+      s1 = (float) evt1->wf[i][j];
+      wevt->wf[i][j] = (short int) (weight * s0 + (1. - weight * s1));
+    }
+  }
+
+  for (i = 0; i < 36; i++) {
+    wevt->segEnergy[i] = evt0->segEnergy[i] + evt1->segEnergy[i];
+  }
+  wevt->ccEnergy = evt0->ccEnergy + evt1->ccEnergy;
+
+  return wevt;
+}
 
 Mario *avg(struct evtList *x, int baselineFlag) {
 
@@ -103,6 +127,7 @@ int main(int argc, char **argv) {
 
   pList[0].rawEvts = avg(runList + 0, baselineFlag);
   pList[1].rawEvts = avg(runList + 1, baselineFlag);
+  pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, 0.5);
 
   fou = fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}
@@ -118,7 +143,7 @@ int main(int argc, char **argv) {
   if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
   fprintf(ftr, "evt, seg, ch, val\n");
 
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 3; i++) {
     for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'
         //seg = (j == 0) ? runList[i].seg : neigh[runList[i].seg][j - 1];
         //evt = runList[i].rawEvts + 7;  // take first evt

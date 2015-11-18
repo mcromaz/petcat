@@ -16,7 +16,7 @@ struct evtList {
                 {"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},
-                        {"none", 9, 0, 1},
+                        {"none", 15, 0, 1},
                         {"none", -1, 0, 1}};
 
 float scratch[37][300];
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
         seg = (j == 0) ? pList[i].seg : neigh[pList[i].seg][j - 1];
         evt = pList[i].rawEvts;  // take 1st evt
         for (k = 0; k < 300; k++) {
-          fprintf(ftr, "%c, %c, %d, %d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
+          fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
       }
     }
   }

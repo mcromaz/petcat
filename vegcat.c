@@ -5,14 +5,15 @@
 #include <assert.h>
 #include "petcat.h"
 #include "vegcat.h"
+#include "neigh.h"
 
 int main(int argc, char **argv) {
 
-  FILE *fin, *fou, *fl;
+  FILE *fin, *fou, *ftr, *fl;
   char *inputFile, *inputFileList, s[80];
   int cnt, numTok, numRuns;
   struct gebData ghdr;
-  Mario *rawEvts;
+  Mario *rawEvts, *evt;
   Event_Signal e;
   struct decomp_state *a;
   struct crys_intpts *x;
@@ -21,7 +22,8 @@ int main(int argc, char **argv) {
   int holenum, xtalnum;
   char ch;
   int verboseFlag = 0, fileListFlag = 0;
-  int stat, numhdr = 0, numevt = 0, maxevt = 100, num, i, j, k;
+  int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
+  char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"filename", required_argument, 0, 'f'},
                           {"numevts", required_argument, 0, 'n'},
@@ -30,6 +32,7 @@ int main(int argc, char **argv) {
   struct {
     char *filename;
     int run;
+    int seg;
     Mario *rawEvts;
     int numEvts;
   } runList[32];
@@ -63,13 +66,13 @@ int main(int argc, char **argv) {
     if (fl == 0) { fprintf(stderr, "could not open file %s\n", inputFileList); exit(1);}
     cnt = 0;
     while (cnt < 32 && fgets(s, 80, fl) != 0) {
-      numTok = sscanf(s, "%s %d", runList[cnt].filename, &runList[cnt].run);
-      if (numTok != 2) { fprintf(stderr, "wrong fmt - line %d, %s\n", cnt + 1, inputFileList); exit(1);}
+      numTok = sscanf(s, "%s %d %d", runList[cnt].filename, &runList[cnt].run, &runList[cnt].seg);
+      if (numTok != 3) { fprintf(stderr, "wrong fmt - line %d, %s\n", cnt + 1, inputFileList); exit(1);}
       cnt++;
     }
   } else {
     strncpy(runList[0].filename, inputFile, 80);
-    runList[0].run = 1; // default
+    runList[0].run = 1, runList[0].seg = 15; // defaults
     cnt = 1;
   }
   numRuns = cnt;
@@ -98,8 +101,24 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
+  ftr = fopen("tr.csv", "w");
+  if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
+  fprintf(ftr, "run,evt,seg,ch,val\n");
+  for (i = 0; i < numRuns; i++) {
+    for (j = 0; j < runList[i].numEvts; j++) {
+      evt = runList[i].rawEvts + j;  // j'th evt in run i
+      for (k = 0; k < 5; k++) {
+        seg = (k == 0) ? runList[i].seg : neigh[runList[i].seg][k - 1];
+        for (l = 0; l < 300; l++) {
+          fprintf(ftr, "%d,%d,%c,%d,%d\n", runList[i].run, j + 1, seglabel[k],
+                    l + 1, evt->wf[seg][l]);
+        }
+      }
+    }
+  }
+  fclose(ftr);
 
+  fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
   for (i = 0; i < numRuns; i++) {
     rawEvts = runList[i].rawEvts;
     for (j = 0; j < runList[i].numEvts; j++) {

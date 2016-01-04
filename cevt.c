@@ -107,9 +107,10 @@ int main(int argc, char **argv) {
   char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"sum-only", no_argument, 0, 's'},
+                          {"append", no_argument, 0, 'a'},
                           {"ratio", required_argument, 0, 'r'},
                           { 0, 0, 0, 0}};
-  int verboseFlag = 0, sumOnlyFlag = 0;
+  int verboseFlag = 0, sumOnlyFlag = 0, appendFlag = 0;
   int i, j, k, num, seg, baselineFlag = 1;
   double ratio = 0.5;   // default
   char ch;
@@ -118,16 +119,18 @@ int main(int argc, char **argv) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
   }
 
-  while ((ch = getopt_long(argc, argv, "vsr:", opts, 0)) != -1) {
+  while ((ch = getopt_long(argc, argv, "vsar:", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
               break;
     case 's': sumOnlyFlag = 1;
               break;
+    case 'a': appendFlag = 1;
+              break;
     case 'r': ratio = atof(optarg);
               break;
-    default: fprintf(stderr, "usage: cevt [-vsr:]\n");
+    default: fprintf(stderr, "usage: cevt [-vsar:]\n");
              exit(1);
     }
   }
@@ -151,7 +154,7 @@ int main(int argc, char **argv) {
   pList[1].rawEvts = avg(runList + 1, baselineFlag);
   pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
 
-  fou = fopen("cevt.dat", "w");
+  fou = (appendFlag == 1) ? fopen("cevt.dat", "a") : fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}
   for (i = 0; i < 3; i++) {
     if (sumOnlyFlag == 1 && i != 2) { continue; }
@@ -162,22 +165,23 @@ int main(int argc, char **argv) {
 
   printf("list 1: %d evts, list 2: %d evts\n", runList[0].numEvts, runList[1].numEvts);
 
-  ftr = fopen("tr.csv", "w");
-  if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
-  fprintf(ftr, "evt, seg, ch, val\n");
-
-  for (i = 0; i < 3; i++) {
-    if (sumOnlyFlag == 1 && i != 2) { continue; }
-    for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'
-        //seg = (j == 0) ? runList[i].seg : neigh[runList[i].seg][j - 1];
-        //evt = runList[i].rawEvts + 7;  // take first evt
-        seg = (j == 0) ? pList[i].seg : neigh[pList[i].seg][j - 1];
-        evt = pList[i].rawEvts;  // take 1st evt
-        for (k = 0; k < 300; k++) {
-          fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
+  if (appendFlag == 0) {
+    ftr = fopen("tr.csv", "w");
+    if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
+    fprintf(ftr, "evt, seg, ch, val\n");
+    for (i = 0; i < 3; i++) {
+      if (sumOnlyFlag == 1 && i != 2) { continue; }
+      for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'
+          //seg = (j == 0) ? runList[i].seg : neigh[runList[i].seg][j - 1];
+          //evt = runList[i].rawEvts + 7;  // take first evt
+          seg = (j == 0) ? pList[i].seg : neigh[pList[i].seg][j - 1];
+          evt = pList[i].rawEvts;  // take 1st evt
+          for (k = 0; k < 300; k++) {
+            fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
+        }
       }
     }
+    fclose(ftr);
   }
-  fclose(ftr);
   return 0;
 }

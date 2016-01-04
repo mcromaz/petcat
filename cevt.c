@@ -106,9 +106,10 @@ int main(int argc, char **argv) {
   Mario *evt;
   char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
+                          {"sum-only", no_argument, 0, 's'},
                           {"ratio", required_argument, 0, 'r'},
                           { 0, 0, 0, 0}};
-  int verboseFlag = 0;
+  int verboseFlag = 0, sumOnlyFlag = 0;
   int i, j, k, num, seg, baselineFlag = 1;
   double ratio = 0.5;   // default
   char ch;
@@ -117,14 +118,16 @@ int main(int argc, char **argv) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
   }
 
-  while ((ch = getopt_long(argc, argv, "vr:", opts, 0)) != -1) {
+  while ((ch = getopt_long(argc, argv, "vsr:", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
               break;
+    case 's': sumOnlyFlag = 1;
+              break;
     case 'r': ratio = atof(optarg);
               break;
-    default: fprintf(stderr, "usage: cevt [-vr:]\n");
+    default: fprintf(stderr, "usage: cevt [-vsr:]\n");
              exit(1);
     }
   }
@@ -151,6 +154,7 @@ int main(int argc, char **argv) {
   fou = fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}
   for (i = 0; i < 3; i++) {
+    if (sumOnlyFlag == 1 && i != 2) { continue; }
     assert( 1 == fwrite(&defaulthdr, sizeof(struct gebData), 1, fou));
     assert( 1 == fwrite(pList[i].rawEvts, sizeof(Mario), 1, fou));
   }
@@ -163,6 +167,7 @@ int main(int argc, char **argv) {
   fprintf(ftr, "evt, seg, ch, val\n");
 
   for (i = 0; i < 3; i++) {
+    if (sumOnlyFlag == 1 && i != 2) { continue; }
     for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'
         //seg = (j == 0) ? runList[i].seg : neigh[runList[i].seg][j - 1];
         //evt = runList[i].rawEvts + 7;  // take first evt

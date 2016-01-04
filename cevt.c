@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <getopt.h>
 #include "petcat.h"
 #include "vegcat.h"
 #include "neigh.h"
@@ -104,10 +105,28 @@ int main(int argc, char **argv) {
   struct gebData ghdr, defaulthdr = {100, sizeof(Mario), 0ll};
   Mario *evt;
   char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd'};
+  struct option opts[] = {{"verbose", no_argument, 0, 'v'},
+                          {"ratio", required_argument, 0, 'r'},
+                          { 0, 0, 0, 0}};
+  int verboseFlag = 0;
   int i, j, k, num, seg, baselineFlag = 1;
+  double ratio = 0.5;   // default
+  char ch;
 
   for (i = 0; i < 2; i++) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
+  }
+
+  while ((ch = getopt_long(argc, argv, "vr:", opts, 0)) != -1) {
+    switch(ch) {
+    case 'v': verboseFlag = 1;
+              fprintf(stdout, "I'm verbose ..\n");
+              break;
+    case 'r': ratio = atof(optarg);
+              break;
+    default: fprintf(stderr, "usage: cevt [-vr:]\n");
+             exit(1);
+    }
   }
 
   for (i = 0; i < 2; i++) {
@@ -127,7 +146,7 @@ int main(int argc, char **argv) {
 
   pList[0].rawEvts = avg(runList + 0, baselineFlag);
   pList[1].rawEvts = avg(runList + 1, baselineFlag);
-  pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, 0.5);
+  pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
 
   fou = fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}

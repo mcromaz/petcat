@@ -12,11 +12,11 @@ struct evtList {
   int seg;
   Mario *rawEvts;
   int numEvts;
-} runList[2] = {{"../coinc-data/WFOUT-Run0126Segment15.dat", 15, 0, 0},
-                {"../coinc-data/WFOUT-Run0126Segment9.dat", 9, 0, 0}};
+} runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
+                {"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},
-                        {"none", 9, 0, 1},
+                        {"none", 15, 0, 1},
                         {"none", 15, 0, 1}};  // fake it
 
 float scratch[37][300];
@@ -34,14 +34,14 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
     for (j = 0; j < 300; j++) {
       s0 = (float)evt0->wf[i][j];
       s1 = (float) evt1->wf[i][j];
-      wevt->wf[i][j] = (short int) (weight * s0 + (1. - weight * s1));
+      wevt->wf[i][j] = (short int) (weight * s0 + (1. - weight) * s1);
     }
   }
 
   for (i = 0; i < 36; i++) {
-    wevt->segEnergy[i] = evt0->segEnergy[i] + evt1->segEnergy[i];
+    wevt->segEnergy[i] = weight * evt0->segEnergy[i] + (1.0 - weight) * evt1->segEnergy[i];
   }
-  wevt->ccEnergy = evt0->ccEnergy + evt1->ccEnergy;
+  wevt->ccEnergy = weight * evt0->ccEnergy + (1 - weight) * evt1->ccEnergy;
 
   return wevt;
 }
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
   fou = fopen("cevt.dat", "w");
   if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 3; i++) {
     assert( 1 == fwrite(&defaulthdr, sizeof(struct gebData), 1, fou));
     assert( 1 == fwrite(pList[i].rawEvts, sizeof(Mario), 1, fou));
   }

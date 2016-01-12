@@ -69,7 +69,7 @@ Mario *avg(struct evtList *x, int baselineFlag) {
   if (baselineFlag != 0) {
     for (i = 0; i < 37; i++) {
       avg = 0.;
-      for (j = 0; j < 30; j++) {
+      for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
         avg += scratch[i][j];
       }
       avg /= 30.;
@@ -87,7 +87,7 @@ Mario *avg(struct evtList *x, int baselineFlag) {
   }
 
   for (i = 0; i < x->numEvts; i++) {
-    evt = x->rawEvts;
+    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
     avgEvt->ccEnergy += evt->ccEnergy;
     for (j = 0; j < 36; j++) {
        avgEvt->segEnergy[j] += evt->segEnergy[j];

@@ -29,34 +29,22 @@ double thoffset[2] = {0.0};
 int threshold = -50;
 
 float cft(Mario *evt){
-//double cft(struct evtList *cfdList){
-  //Mario *evt, *sumevt;
   double sumwf[300], zerocross;
   float s0, s1;
   int i = 36, j, k;
   int thflg = 0;
 
-  /*
-  evt = calloc(1, sizeof(Mario));
-  sumevt = calloc(1, sizeof(Mario));
-  evt = cfdList.rawEvts;
-  i = cfdList.seg;
-  */
-
   for (j = 0; j<cfdelay; j++) {
     s1 = cf * (double)evt->wf[i][j];
-    //sumevt->wf[i][j] = (short int) s1;
     sumwf[j] = s1;
   }
   for (j = cfdelay; j < 300; j++) {
     s0 = (double)evt->wf[i][j - cfdelay];
     s1 = cf * (double)evt->wf[i][j];
-    //sumevt->wf[i][j] = (short int) (s0 + s1);
     sumwf[j] = s0 + s1;
   }
 
   for(j= 10; j < 300 - 10; j++) {
-    //if(thflg == 1 && sumwf[j] * sumwf[j+1] < 0.0 && sumwf[j-10] * sumwf[j+10] < 0.0){
     if(thflg == 1 && sumwf[j] < 0. && sumwf[j+1] > 0.){
       s0 = 0.;
       s1 = 0.;
@@ -69,8 +57,8 @@ float cft(Mario *evt){
       thflg = 1;
     }
   }
-  //zerocross =  (double) j + sumwf[j] / (sumwf[j]-sumwf[j+1]); //normaly int might have enough resolution..
-  zerocross =  (double) j -2. + 5. * s0 / (s0 - s1); //normaly int might have enough resolution..
+  //zerocross =  (double) j + sumwf[j] / (sumwf[j]-sumwf[j+1]); 
+  zerocross =  (double) j -2. + 5. * s0 / (s0 - s1); 
 
   if(thflg == 1){
     return zerocross;
@@ -78,7 +66,6 @@ float cft(Mario *evt){
     return -1000.;
   }
 }
-///RT
 
 
 Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
@@ -106,8 +93,6 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
 }
 
 Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
-
-  //struct evtList *y; // not used
   Mario *avgEvt, *evt;
   float avg;
   int i, j, k;
@@ -198,7 +183,6 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 }
 
 float cc_avg_cft(struct evtList *x, int baselineFlag) { // Get the constant fraction timing of Center contact channel. 36th
-  //struct evtList *y; // not used
   Mario *avgEvt, *evt;
   float avg;
   int i, j, k;
@@ -208,15 +192,12 @@ float cc_avg_cft(struct evtList *x, int baselineFlag) { // Get the constant frac
 
   for (i = 0; i < x->numEvts; i++) {
     evt = x->rawEvts + i;
-    //for (j = 0; j < 37; j++) {
     for (k = 0; k < 300; k++) {
       scratch[36][k] += (float) evt->wf[36][k];
     }
-    //}
   }
 
   if (baselineFlag != 0) {
-    //for (i = 0; i < 37; i++) {
     avg = 0.;
     for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
       avg += scratch[36][j];
@@ -225,83 +206,15 @@ float cc_avg_cft(struct evtList *x, int baselineFlag) { // Get the constant frac
     for (j = 0; j < 300; j++) {
       scratch[36][j] -= avg;
     }
-    //}
   }
 
-  //for (j = 0; j < 37; j++) {
   for (k = 0; k < 300; k++) {
     scratch[36][k] /= (float) x->numEvts;
     avgEvt->wf[36][k] = (short) scratch[36][k];
-    //}
   }
-  /*
-  for (i = 0; i < x->numEvts; i++) {
-    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
-    avgEvt->ccEnergy += evt->ccEnergy;
-    for (j = 0; j < 36; j++) {
-      avgEvt->segEnergy[j] += evt->segEnergy[j];
-    }
-  }
-  avgEvt->ccEnergy /= (float) x->numEvts;
-  for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
-
-  return avgEvt;
-  */
 
   return cft(avgEvt);
 
-}
-
-Mario *avg(struct evtList *x, int baselineFlag) {// This function no more used
-
-  //struct evtList *y; // not used
-  Mario *avgEvt, *evt;
-  float avg;
-  int i, j, k;
-
-  avgEvt = calloc(1, sizeof(Mario));
-  memset(scratch, 0, 37 * 300 * sizeof(float));
-
-  for (i = 0; i < x->numEvts; i++) {
-    evt = x->rawEvts + i;
-    for (j = 0; j < 37; j++) {
-      for (k = 0; k < 300; k++) {
-        scratch[j][k] += (float) evt->wf[j][k];
-      }
-    }
-  }
-
-  if (baselineFlag != 0) {
-    for (i = 0; i < 37; i++) {
-      avg = 0.;
-      for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
-        avg += scratch[i][j];
-      }
-      avg /= 30.;
-      for (j = 0; j < 300; j++) {
-        scratch[i][j] -= avg;
-      }
-    }
-  }
-
-  for (j = 0; j < 37; j++) {
-    for (k = 0; k < 300; k++) {
-      scratch[j][k] /= (float) x->numEvts;
-      avgEvt->wf[j][k] = (short) scratch[j][k];
-    }
-  }
-
-  for (i = 0; i < x->numEvts; i++) {
-    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
-    avgEvt->ccEnergy += evt->ccEnergy;
-    for (j = 0; j < 36; j++) {
-       avgEvt->segEnergy[j] += evt->segEnergy[j];
-    }
-  }
-  avgEvt->ccEnergy /= (float) x->numEvts;
-  for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
-
-  return avgEvt;
 }
 
 int main(int argc, char **argv) {
@@ -355,17 +268,11 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  /*
-  pList[0].rawEvts = avg(runList + 0, baselineFlag);
-  pList[1].rawEvts = avg(runList + 1, baselineFlag); //In principle, the analysis should be done for only one crystal...
-  thoffset[0] =  cft(pList[0].rawEvts, pList[0].seg); //Deduce avg time offset first. RT Jan 12
-  thoffset[1] =  cft(pList[1].rawEvts, pList[1].seg);
-  *///Uncomment on Jan13
   thoffset[0] = cc_avg_cft(runList + 0, baselineFlag);
-  thoffset[1] = thoffset[0]; // Align the offset with the first data set.
+  thoffset[1] = cc_avg_cft(runList + 1, baselineFlag); // It was necessary to be executed to adjust baseline
 
   pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, thoffset[0]);
-  pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[1]);
+  pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[0]); //use theoffset[0] not [1]
 
   pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
 

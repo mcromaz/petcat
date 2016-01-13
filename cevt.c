@@ -31,10 +31,10 @@ int threshold = -50;
 float cft(Mario *evt, int i){
 //double cft(struct evtList *cfdList){
   //Mario *evt, *sumevt;
-  double sumwf[300];
+  double sumwf[300], zerocross;
   float s0, s1;
   //int i, j;
-  int j;
+  int j, k;
   int thflg = 0;
 
   /*
@@ -45,26 +45,39 @@ float cft(Mario *evt, int i){
   */
 
   for (j = 0; j<cfdelay; j++) {
-    s1 = cf * (float)evt->wf[i][j];
+    s1 = cf * (double)evt->wf[i][j];
     //sumevt->wf[i][j] = (short int) s1;
     sumwf[j] = s1;
   }
   for (j = cfdelay; j < 300; j++) {
-    s0 = (float)evt->wf[i][j - cfdelay];
-    s1 = cf * (float)evt->wf[i][j];
+    s0 = (double)evt->wf[i][j - cfdelay];
+    s1 = cf * (double)evt->wf[i][j];
     //sumevt->wf[i][j] = (short int) (s0 + s1);
     sumwf[j] = s0 + s1;
   }
 
-  for(j= 0; j < 300 - 1; j++) {
-    if(thflg == 1 && sumwf[j] * sumwf[j+1] < 0.0){
-      break;
+  for(j= 10; j < 300 - 10; j++) {
+    //if(thflg == 1 && sumwf[j] * sumwf[j+1] < 0.0 && sumwf[j-10] * sumwf[j+10] < 0.0){
+    if(thflg == 1 && sumwf[j] < 0. && sumwf[j+1] > 0.){
+      s0 = 0.;
+      s1 = 0.;
+      for(k = 0; k < 5; k++){
+	s0 += sumwf[j - k]/5.;
+	s1 += sumwf[j + 1 + k]/5.;
+      }
+      if(s0 < 0. && s1 > 0. && s1 - s0 > sumwf[j+1] - sumwf[j])  break;
     }else if(thflg == 0 && sumwf[j] < threshold){
-      thflg == 1;
+      thflg = 1;
     }
   }
- 
-  return (double) j + sumwf[j] / (sumwf[j]-sumwf[j+1]); //normaly int might have enough resolution..
+  //zerocross =  (double) j + sumwf[j] / (sumwf[j]-sumwf[j+1]); //normaly int might have enough resolution..
+  zerocross =  (double) j -2. + 5. * s0 / (s0 - s1); //normaly int might have enough resolution..
+
+  if(thflg == 1){
+    return zerocross;
+  } else {
+    return -1000.;
+  }
 }
 ///RT
 
@@ -128,9 +141,15 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
     }
     Deltat = (int) (refoffset - cft(avgEvt, thesegid));
     assert(Deltat*Deltat < 90000);
-    printf("%i ",Deltat); // debug
 
     //Now fill scrach[][] again with applying time offset.
+    if(Deltat * Deltat >100.){ // strange event should be discarded at this point
+      x->numEvts =  x->numEvts - 1;
+      printf("Evt. %i of %s\t Ref offset: %f, offset: %f, Delta T: %i -> Discarded. \n",i , x->filename , refoffset,cft(avgEvt, thesegid),Deltat); // Print discarded events
+      continue;
+    }
+    //printf("%f, %f, %i\n", refoffset, cft(avgEvt, thesegid), Deltat); // debug
+
     if(Deltat < 0) {
       for (j = 0; j < 37; j++) {
 	for (k = 0; k < 300 + Deltat; k++) {
@@ -143,6 +162,11 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
 	  scratch[j][k] += (float) evt->wf[j][k - Deltat];
 	}
       }
+    }
+  
+    avgEvt->ccEnergy += evt->ccEnergy;
+    for (j = 0; j < 36; j++) {
+       avgEvt->segEnergy[j] += evt->segEnergy[j];
     }
   }
   
@@ -159,6 +183,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
     }
   }
 
+  //Divide by "accepted num evts"
   for (j = 0; j < 37; j++) {
     for (k = 0; k < 300; k++) {
       scratch[j][k] /= (float) x->numEvts;
@@ -166,13 +191,6 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
     }
   }
 
-  for (i = 0; i < x->numEvts; i++) {
-    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
-    avgEvt->ccEnergy += evt->ccEnergy;
-    for (j = 0; j < 36; j++) {
-       avgEvt->segEnergy[j] += evt->segEnergy[j];
-    }
-  }
   avgEvt->ccEnergy /= (float) x->numEvts;
   for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
 

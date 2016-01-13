@@ -28,13 +28,12 @@ int cfdelay = 10;
 double thoffset[2] = {0.0};
 int threshold = -50;
 
-float cft(Mario *evt, int i){
+float cft(Mario *evt){
 //double cft(struct evtList *cfdList){
   //Mario *evt, *sumevt;
   double sumwf[300], zerocross;
   float s0, s1;
-  //int i, j;
-  int j, k;
+  int i = 36, j, k;
   int thflg = 0;
 
   /*
@@ -106,7 +105,7 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
   return wevt;
 }
 
-Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double refoffset) {
+Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 
   //struct evtList *y; // not used
   Mario *avgEvt, *evt;
@@ -114,6 +113,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
   int i, j, k;
   int Deltat;
   int refwf[300];
+  int thesegid = 36;
 
   avgEvt = calloc(1, sizeof(Mario));
   memset(scratch, 0, 37 * 300 * sizeof(float));
@@ -139,16 +139,16 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
     for (j = 0; j < 300; j++) {
       avgEvt->wf[thesegid][j] = (short) refwf[j];
     }
-    Deltat = (int) (refoffset - cft(avgEvt, thesegid));
+    Deltat = (int) (refoffset - cft(avgEvt));
     assert(Deltat*Deltat < 90000);
 
     //Now fill scrach[][] again with applying time offset.
     if(Deltat * Deltat >100.){ // strange event should be discarded at this point
       x->numEvts =  x->numEvts - 1;
-      printf("Evt. %i of %s\t Ref offset: %f, offset: %f, Delta T: %i -> Discarded. \n",i , x->filename , refoffset,cft(avgEvt, thesegid),Deltat); // Print discarded events
+      printf("Evt. %i of %s\t Ref offset: %f, offset: %f, Delta T: %i -> Discarded. \n",i , x->filename , refoffset,cft(avgEvt),Deltat); // Print discarded events
       continue;
     }
-    //printf("%f, %f, %i\n", refoffset, cft(avgEvt, thesegid), Deltat); // debug
+    //printf("%f, %f, %i\n", refoffset, cft(avgEvt), Deltat); // debug
 
     if(Deltat < 0) {
       for (j = 0; j < 37; j++) {
@@ -197,7 +197,62 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, int thesegid, double re
   return avgEvt;
 }
 
-Mario *avg(struct evtList *x, int baselineFlag) {
+float cc_avg_cft(struct evtList *x, int baselineFlag) { // Get the constant fraction timing of Center contact channel. 36th
+  //struct evtList *y; // not used
+  Mario *avgEvt, *evt;
+  float avg;
+  int i, j, k;
+
+  avgEvt = calloc(1, sizeof(Mario));
+  memset(scratch, 0, 37 * 300 * sizeof(float));
+
+  for (i = 0; i < x->numEvts; i++) {
+    evt = x->rawEvts + i;
+    //for (j = 0; j < 37; j++) {
+    for (k = 0; k < 300; k++) {
+      scratch[36][k] += (float) evt->wf[36][k];
+    }
+    //}
+  }
+
+  if (baselineFlag != 0) {
+    //for (i = 0; i < 37; i++) {
+    avg = 0.;
+    for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
+      avg += scratch[36][j];
+    }
+    avg /= 30.;
+    for (j = 0; j < 300; j++) {
+      scratch[36][j] -= avg;
+    }
+    //}
+  }
+
+  //for (j = 0; j < 37; j++) {
+  for (k = 0; k < 300; k++) {
+    scratch[36][k] /= (float) x->numEvts;
+    avgEvt->wf[36][k] = (short) scratch[36][k];
+    //}
+  }
+  /*
+  for (i = 0; i < x->numEvts; i++) {
+    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
+    avgEvt->ccEnergy += evt->ccEnergy;
+    for (j = 0; j < 36; j++) {
+      avgEvt->segEnergy[j] += evt->segEnergy[j];
+    }
+  }
+  avgEvt->ccEnergy /= (float) x->numEvts;
+  for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
+
+  return avgEvt;
+  */
+
+  return cft(avgEvt);
+
+}
+
+Mario *avg(struct evtList *x, int baselineFlag) {// This function no more used
 
   //struct evtList *y; // not used
   Mario *avgEvt, *evt;
@@ -300,13 +355,17 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
+  /*
   pList[0].rawEvts = avg(runList + 0, baselineFlag);
   pList[1].rawEvts = avg(runList + 1, baselineFlag); //In principle, the analysis should be done for only one crystal...
   thoffset[0] =  cft(pList[0].rawEvts, pList[0].seg); //Deduce avg time offset first. RT Jan 12
   thoffset[1] =  cft(pList[1].rawEvts, pList[1].seg);
+  *///Uncomment on Jan13
+  thoffset[0] = cc_avg_cft(runList + 0, baselineFlag);
+  thoffset[1] = thoffset[0]; // Align the offset with the first data set.
 
-  pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, pList[0].seg, thoffset[0]);
-  pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, pList[1].seg, thoffset[1]);
+  pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, thoffset[0]);
+  pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[1]);
 
   pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
 

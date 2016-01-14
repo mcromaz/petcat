@@ -140,7 +140,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 	for (k = 0; k < 300 + Deltat; k++) {
 	  scratch[j][k] += (float) evt->wf[j][k - Deltat];
 	}
-	if (baselineFlag != 0) { // Because the baseline is shifted for each event, besline subtraction should be done evt by evt. RT Jan13
+	if (baselineFlag != 0) { // Because the triger timing is shifted for each event, besline subtraction should be done evt by evt. RT Jan13
 	  avg = 0.;
 	  for (k = 0; k < 30; k++) {
 	    avg +=  (float) evt->wf[j][k - Deltat];
@@ -275,8 +275,7 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  thoffset[0] = cc_avg_cft(runList + 0, baselineFlag);
-  thoffset[1] = cc_avg_cft(runList + 1, baselineFlag); // It was necessary to be executed to adjust baseline
+  thoffset[0] = cc_avg_cft(runList + 0, baselineFlag); // Deduce the reference time
 
   pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, thoffset[0]);
   pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[0]); //use theoffset[0] not [1]

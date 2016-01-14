@@ -140,31 +140,38 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 	for (k = 0; k < 300 + Deltat; k++) {
 	  scratch[j][k] += (float) evt->wf[j][k - Deltat];
 	}
+	if (baselineFlag != 0) { // Because the baseline is shifted for each event, besline subtraction should be done evt by evt. RT Jan13
+	  avg = 0.;
+	  for (k = 0; k < 30; k++) {
+	    avg +=  (float) evt->wf[j][k - Deltat];
+	  }
+	  avg /= 30.;
+	  for (k = 0; k < 300 + Deltat; k++) {
+	    scratch[j][k] -= avg;
+	  }
+	}
       }
     } else {
       for (j = 0; j < 37; j++) {
 	for (k = Deltat; k < 300; k++) {
 	  scratch[j][k] += (float) evt->wf[j][k - Deltat];
 	}
+	if (baselineFlag != 0) {
+	  avg = 0.;
+	  for (k = Deltat; k < 30 + Deltat; k++) {
+	    avg +=  (float) evt->wf[j][k - Deltat];
+	  }
+	  avg /= 30.;
+	  for (k = Deltat; k < 300 + Deltat; k++) {
+	    scratch[j][k] -= avg;
+	  }
+	}
       }
     }
-  
+    
     avgEvt->ccEnergy += evt->ccEnergy;
     for (j = 0; j < 36; j++) {
        avgEvt->segEnergy[j] += evt->segEnergy[j];
-    }
-  }
-  
-  if (baselineFlag != 0) {
-    for (i = 0; i < 37; i++) {
-      avg = 0.;
-      for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
-        avg += scratch[i][j];
-      }
-      avg /= 30.;
-      for (j = 0; j < 300; j++) {
-        scratch[i][j] -= avg;
-      }
     }
   }
 

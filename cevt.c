@@ -23,8 +23,8 @@ struct evtList pList[] = {{"none", 15, 0, 1},
 float scratch[37][300];
 
 //for calculating the timing of CFD Jan12 RT
-double cf = -0.2;//should be negative value
-int cfdelay = 5;
+double cf = -0.5;//should be negative value
+int cfdelay = 10;
 double thoffset[2] = {0.0};
 int threshold = -50;
 
@@ -99,10 +99,14 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
   int Deltat;
   int refwf[300];
   int thesegid = 36;
+  FILE *foffset;
 
   avgEvt = calloc(1, sizeof(Mario));
   memset(scratch, 0, 37 * 300 * sizeof(float));
 
+  foffset = fopen("output/offset.csv", "w");
+  fprintf(foffset, "RefOffset, Offset of the evt, Deltat\n");
+  
   for (i = 0; i < x->numEvts; i++) {
     evt = x->rawEvts + i;
     memset(refwf, 0, 300 * sizeof(int));
@@ -134,7 +138,9 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
       printf("Evt. %i of %s\t Ref offset: %f, offset: %f, Delta T: %i -> Discarded. \n",i , x->filename , refoffset,cft(avgEvt),Deltat); // Print discarded events
       continue;
     }
-    //printf("%f, %f, %i\n", refoffset, cft(avgEvt), Deltat); // debug
+    printf("%f, %f, %i\n", refoffset, cft(avgEvt), Deltat); // debug
+    fprintf(foffset, "%f, %f, %i\n", refoffset, cft(avgEvt), Deltat); 
+	
 
     if(Deltat < 0) {
       for (j = 0; j < 37; j++) {
@@ -187,6 +193,8 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 
   avgEvt->ccEnergy /= (float) x->numEvts;
   for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
+
+  fclose(foffset);
 
   return avgEvt;
 }
@@ -311,6 +319,7 @@ int main(int argc, char **argv) {
     case 'r': ratio = atof(optarg);
               break;
     case 'c': CFDFlag = 1;
+              printf("CFDFalg is now set to 1\n");
               break;
     default: fprintf(stderr, "usage: cevt [-vsarc:]\n");
              exit(1);
@@ -372,7 +381,7 @@ int main(int argc, char **argv) {
             fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
 	  }
       }
-      j = 6;
+      j = 5;
       seg = 36; // Center Contact
       for (k = 0; k < 300; k++) {
 	fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);

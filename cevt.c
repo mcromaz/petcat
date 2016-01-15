@@ -23,8 +23,8 @@ struct evtList pList[] = {{"none", 15, 0, 1},
 float scratch[37][300];
 
 //for calculating the timing of CFD Jan12 RT
-double cf = -0.5;//should be negative value
-int cfdelay = 10;
+double cf = -0.2;//should be negative value
+int cfdelay = 5;
 double thoffset[2] = {0.0};
 int threshold = -50;
 
@@ -95,7 +95,7 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
 Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
   Mario *avgEvt, *evt;
   float avg;
-  int i, j, k;
+  int i, j, k, n = 0;
   int Deltat;
   int refwf[300];
   int thesegid = 36;
@@ -113,11 +113,11 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
     if (baselineFlag != 0) {
       avg = 0.;
       for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
-        avg += refwf[j];
+	avg += refwf[j];
       }
       avg /= 30.;
       for (j = 0; j < 300; j++) {
-        refwf[j] -= avg;
+	refwf[j] -= avg;
       }
     }
     
@@ -129,7 +129,8 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 
     //Now fill scrach[][] again with applying time offset.
     if(Deltat * Deltat >100.){ // strange event should be discarded at this point
-      x->numEvts =  x->numEvts - 1;
+      //x->numEvts =  x->numEvts - 1; <- Bug
+      n++; // Add dummy int
       printf("Evt. %i of %s\t Ref offset: %f, offset: %f, Delta T: %i -> Discarded. \n",i , x->filename , refoffset,cft(avgEvt),Deltat); // Print discarded events
       continue;
     }
@@ -162,7 +163,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
 	    avg +=  (float) evt->wf[j][k - Deltat];
 	  }
 	  avg /= 30.;
-	  for (k = Deltat; k < 300 + Deltat; k++) {
+	  for (k = Deltat; k < 300; k++) {
 	    scratch[j][k] -= avg;
 	  }
 	}
@@ -176,6 +177,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
   }
 
   //Divide by "accepted num evts"
+  x->numEvts = x->numEvts - n;
   for (j = 0; j < 37; j++) {
     for (k = 0; k < 300; k++) {
       scratch[j][k] /= (float) x->numEvts;
@@ -183,6 +185,58 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset) {
     }
   }
 
+  avgEvt->ccEnergy /= (float) x->numEvts;
+  for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
+
+  return avgEvt;
+}
+
+Mario *avg(struct evtList *x, int baselineFlag) {// Old fcn
+
+  //struct evtList *y; // not used
+  Mario *avgEvt, *evt;
+  float avg;
+  int i, j, k;
+
+  avgEvt = calloc(1, sizeof(Mario));
+  memset(scratch, 0, 37 * 300 * sizeof(float));
+
+  for (i = 0; i < x->numEvts; i++) {
+    evt = x->rawEvts + i;
+    for (j = 0; j < 37; j++) {
+      for (k = 0; k < 300; k++) {
+        scratch[j][k] += (float) evt->wf[j][k];
+      }
+    }
+  }
+
+  if (baselineFlag != 0) {
+    for (i = 0; i < 37; i++) {
+      avg = 0.;
+      for (j = 0; j < 30; j++) { // According to the article, 40 points are used for the baseline estimation.. RT Jan11
+        avg += scratch[i][j];
+      }
+      avg /= 30.;
+      for (j = 0; j < 300; j++) {
+        scratch[i][j] -= avg;
+      }
+    }
+  }
+
+  for (j = 0; j < 37; j++) {
+    for (k = 0; k < 300; k++) {
+      scratch[j][k] /= (float) x->numEvts;
+      avgEvt->wf[j][k] = (short) scratch[j][k];
+    }
+  }
+
+  for (i = 0; i < x->numEvts; i++) {
+    evt = x->rawEvts + i; //Old one was "evt = x->rawEvts;" which doesn't incriment. Jan11
+    avgEvt->ccEnergy += evt->ccEnergy;
+    for (j = 0; j < 36; j++) {
+      avgEvt->segEnergy[j] += evt->segEnergy[j];
+    }
+  }
   avgEvt->ccEnergy /= (float) x->numEvts;
   for (i = 0; i < 36; i++) { avgEvt->segEnergy[i] /= (float) x->numEvts; }
 
@@ -229,14 +283,15 @@ int main(int argc, char **argv) {
   FILE *fin, *fou, *ftr;
   struct gebData ghdr, defaulthdr = {100, sizeof(Mario), 0ll};
   Mario *evt;
-  char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd'};
+  char evtlabel[] = {'a', 'b', 's'}, seglabel[] = {'n', 'l', 'r', 'u', 'd', 'c'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"sum-only", no_argument, 0, 's'},
                           {"append", no_argument, 0, 'a'},
-                          {"ratio", required_argument, 0, 'r'},
-                          { 0, 0, 0, 0}};
+                          {"ratio", required_argument, 0, 'r'}, 
+                          {"cfd", no_argument, 0, 'c'}, //Use CFD
+			  { 0, 0, 0, 0}};
   int verboseFlag = 0, sumOnlyFlag = 0, appendFlag = 0;
-  int i, j, k, num, seg, baselineFlag = 1;
+  int i, j, k, num, seg, baselineFlag = 1, CFDFlag = 0;
   double ratio = 0.5;   // default
   char ch;
 
@@ -244,7 +299,7 @@ int main(int argc, char **argv) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
   }
 
-  while ((ch = getopt_long(argc, argv, "vsar:", opts, 0)) != -1) {
+  while ((ch = getopt_long(argc, argv, "vsarc:", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
@@ -255,7 +310,9 @@ int main(int argc, char **argv) {
               break;
     case 'r': ratio = atof(optarg);
               break;
-    default: fprintf(stderr, "usage: cevt [-vsar:]\n");
+    case 'c': CFDFlag = 1;
+              break;
+    default: fprintf(stderr, "usage: cevt [-vsarc:]\n");
              exit(1);
     }
   }
@@ -275,15 +332,23 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  thoffset[0] = cc_avg_cft(runList + 0, baselineFlag); // Deduce the reference time
+  if (CFDFlag == 1) {
+    thoffset[0] = cc_avg_cft(runList + 0, baselineFlag); // Deduce the reference time
 
-  pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, thoffset[0]);
-  pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[0]); //use theoffset[0] not [1]
+    pList[0].rawEvts = avg_thoffset(runList + 0, baselineFlag, thoffset[0]);
+    pList[1].rawEvts = avg_thoffset(runList + 1, baselineFlag, thoffset[0]); //use theoffset[0] not [1]
+  } else {
+    pList[0].rawEvts = avg(runList + 0, baselineFlag);
+    pList[1].rawEvts = avg(runList + 1, baselineFlag);
+  }
 
   pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
+  
+  char outname[20];
+  CFDFlag == 1 ? sprintf(outname, "cevt_cfd.dat") : sprintf(outname, "cevt.dat");
+  fou = (appendFlag == 1) ? fopen(outname, "a") : fopen(outname, "w");
+  if (fou == 0) { fprintf(stderr, "could not open file %s\n",outname); exit(1);}
 
-  fou = (appendFlag == 1) ? fopen("cevt.dat", "a") : fopen("cevt.dat", "w");
-  if (fou == 0) { fprintf(stderr, "could not open file cevt.dat\n"); exit(1);}
   for (i = 0; i < 3; i++) {
     if (sumOnlyFlag == 1 && i != 2) { continue; }
     assert( 1 == fwrite(&defaulthdr, sizeof(struct gebData), 1, fou));
@@ -294,19 +359,23 @@ int main(int argc, char **argv) {
   printf("list 1: %d evts, list 2: %d evts\n", runList[0].numEvts, runList[1].numEvts);
 
   if (appendFlag == 0) {
-    ftr = fopen("tr.csv", "w");
-    if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
+    CFDFlag == 1 ? sprintf(outname, "tr_cfd.csv") : sprintf(outname, "tr.csv");
+    ftr = fopen(outname, "w");
+    if (ftr == 0) { fprintf(stderr, "could not open file %s\n", outname); exit(1);}
     fprintf(ftr, "evt, seg, ch, val\n");
     for (i = 0; i < 3; i++) {
       if (sumOnlyFlag == 1 && i != 2) { continue; }
-      for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'
-          //seg = (j == 0) ? runList[i].seg : neigh[runList[i].seg][j - 1];
-          //evt = runList[i].rawEvts + 7;  // take first evt
-          seg = (j == 0) ? pList[i].seg : neigh[pList[i].seg][j - 1];
           evt = pList[i].rawEvts;  // take 1st evt
+	  for (j = 0; j < 5; j++) {  // 'n', 'l', 'r', 'u', 'd'(, 'c')
+	    seg = (j == 0) ? pList[i].seg : neigh[pList[i].seg][j - 1];
           for (k = 0; k < 300; k++) {
             fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
-        }
+	  }
+      }
+      j = 6;
+      seg = 36; // Center Contact
+      for (k = 0; k < 300; k++) {
+	fprintf(ftr, "%c,%c,%d,%d\n", evtlabel[i], seglabel[j], k + 1, evt->wf[seg][k]);
       }
     }
     fclose(ftr);

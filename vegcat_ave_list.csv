@@ -1,0 +1,18 @@
+filename, evtnum, avex, avey, avez, aveE
+../coinc-data/WFOUT-Run0111Segment15.dat, 68 evts, -28.233986, 0.620247, 29.066748, 2.788133
+../coinc-data/WFOUT-Run0113Segment15.dat, 42 evts, -10.808989, 2.393115, 29.424948, 2.760566
+../coinc-data/WFOUT-Run0114Segment9.dat, 40 evts, -26.507805, -4.792065, 19.813645, 2.810816
+../coinc-data/WFOUT-Run0114Segment15.dat, 58 evts, -26.027414, -2.549662, 25.901374, 2.793278
+../coinc-data/WFOUT-Run0125Segment15.dat, 49 evts, -17.408746, -2.558301, 32.001081, 2.776462
+../coinc-data/WFOUT-Run0126Segment9.dat, 44 evts, -19.128531, 11.214535, 21.790843, 2.781488
+../coinc-data/WFOUT-Run0126Segment15.dat, 43 evts, -17.512658, -0.257257, 28.892911, 2.781608
+../coinc-data/WFOUT-Run0142Segment15.dat, 39 evts, -17.222895, 9.008531, 31.281566, 2.799864
+../coinc-data/WFOUT-Run0143Segment9.dat, 38 evts, -26.571212, 14.261590, 19.765216, 2.794433
+../coinc-data/WFOUT-Run0143Segment15.dat, 32 evts, -24.676280, 7.164211, 27.073789, 2.809293
+../coinc-data/WFOUT-Run0148Segment9.dat, 29 evts, -19.209614, 11.943845, 22.346397, 2.787241
+../coinc-data/WFOUT-Run0148Segment15.dat, 26 evts, -17.325592, 5.951922, 27.168411, 2.785445
+../coinc-data/WFOUT-Run0149Segment15.dat, 33 evts, -18.184742, 2.687328, 30.145200, 2.773450
+../coinc-data/WFOUT-Run0150Segment15.dat, 39 evts, -18.759800, 7.605518, 34.771358, 2.788925
+../coinc-data/WFOUT-Run0160Segment9.dat, 15 evts, -9.772165, 1.610413, 22.541872, 2.777180
+../coinc-data/WFOUT-Run0160Segment15.dat, 24 evts, -8.989320, 0.532682, 32.656285, 2.769463
+../coinc-data/WFOUT-Run0161Segment15.dat, 49 evts, -9.471751, 1.509340, 34.338185, 2.761152

@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv) {
 
-  FILE *fin, *fou, *ftr, *fl;
+  FILE *fin, *fou, *ftr, *fl, *fave;
   char *inputFile, *inputFileList, s[80];
   int cnt, numTok, numRuns;
   struct gebData ghdr;
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  ftr = fopen("tr.csv", "w");
+  ftr = fopen("tr_vegcat.csv", "w"); //RT to avoid confricts with cevt.c
   if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
   fprintf(ftr, "run,evt,seg,ch,val\n");
   for (i = 0; i < numRuns; i++) {
@@ -116,11 +116,14 @@ int main(int argc, char **argv) {
       }
     }
   }
-  fclose(ftr);
+  fclose(ftr); // Center contact will not  be included in this code. If you use cevt.c, CC wave form is also wrote.
 
+  fave = fopen("vegcat_ave.csv", "w");
+  fprintf(fave,"filename, evtnum, avex, avey, avez, aveE\n");
   fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
   for (i = 0; i < numRuns; i++) {
     rawEvts = runList[i].rawEvts;
+    double ave[4] = {0.0};//RT
     for (j = 0; j < runList[i].numEvts; j++) {
       stat = preProcessMario(rawEvts + j, &e, &pcnt);
       x = dl_decomp(a, &e, &postCnt);
@@ -130,9 +133,17 @@ int main(int argc, char **argv) {
       for (k = 0; k < x->num; k++) {
       fprintf(fou, "%d, %d, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f\n", runList[i].run, j + 1, k + 1,
         x->intpts[k].seg, x->intpts[k].x, x->intpts[k].y, x->intpts[k].z, x->intpts[k].e);
+      ave[0] += x->intpts[k].x/((double) (x->num * runList[i].numEvts));
+      ave[1] += x->intpts[k].y/((double) (x->num * runList[i].numEvts));
+      ave[2] += x->intpts[k].z/((double) (x->num * runList[i].numEvts));
+      ave[3] += x->intpts[k].e/((double) (x->num * runList[i].numEvts));
       }
     }
     fprintf(stdout, "%s, %d evts\n", runList[i].filename, runList[i].numEvts);
+    fprintf(stdout, "avex:%f, avey:%f, avez:%f, avee:%f\n\n", ave[0], ave[1], ave[2], ave[3]);
+    fprintf(fave, "%s, %d evts, ", runList[i].filename, runList[i].numEvts);
+    fprintf(fave, "%f, %f, %f, %f\n", ave[0], ave[1], ave[2], ave[3]);
   }
+  fclose(fave);
   return 0;
 }

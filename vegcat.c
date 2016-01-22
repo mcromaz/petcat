@@ -10,7 +10,7 @@
 int main(int argc, char **argv) {
 
   FILE *fin, *fou, *ftr, *fl, *fave;
-  char *inputFile, *inputFileList, s[80];
+  char *inputFile, *inputFileList, s[200];
   int cnt, numTok, numRuns;
   struct gebData ghdr;
   Mario *rawEvts, *evt;
@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   int verboseFlag = 0, fileListFlag = 0;
   int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
   char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
+  const int maxruns = 200;
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"filename", required_argument, 0, 'f'},
                           {"numevts", required_argument, 0, 'n'},
@@ -35,7 +36,9 @@ int main(int argc, char **argv) {
     int seg;
     Mario *rawEvts;
     int numEvts;
-  } runList[32];
+  } runList[maxruns];
+
+  inputFileList = malloc(200 * sizeof(char));
 
   while ((ch = getopt_long(argc, argv, "vf:l:n:", opts, 0)) != -1) {
     switch(ch) {
@@ -55,7 +58,7 @@ int main(int argc, char **argv) {
   }
   printf("vegcat\n");
 
-  for (i = 0; i < 32; i++) {
+  for (i = 0; i < maxruns; i++) {
     runList[i].rawEvts = malloc(maxevt * sizeof(Mario));
     runList[i].filename = malloc(80);
     runList[i].numEvts = 0;
@@ -65,19 +68,22 @@ int main(int argc, char **argv) {
     fl = fopen(inputFileList, "r");
     if (fl == 0) { fprintf(stderr, "could not open file %s\n", inputFileList); exit(1);}
     cnt = 0;
-    while (cnt < 32 && fgets(s, 80, fl) != 0) {
+    while (cnt < maxruns && fgets(s, 80, fl) != 0) {
       numTok = sscanf(s, "%s %d %d", runList[cnt].filename, &runList[cnt].run, &runList[cnt].seg);
       if (numTok != 3) { fprintf(stderr, "wrong fmt - line %d, %s\n", cnt + 1, inputFileList); exit(1);}
       cnt++;
     }
   } else {
+    strncpy(inputFileList, inputFile, 80);// inputFileList is also used for filename of output
     strncpy(runList[0].filename, inputFile, 80);
     runList[0].run = 1, runList[0].seg = 15; // defaults
     cnt = 1;
   }
   numRuns = cnt;
 
-  assert(( fou = fopen("out.csv", "w")) != 0);
+  //assert(( fou = fopen("out.csv", "w")) != 0);
+  sprintf(s, "./vegcatout/%s_out.csv", inputFileList);
+  assert((fou = fopen(s, "w")) != 0);
 
   stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
            cfg.xTalkParsName);
@@ -101,7 +107,9 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  ftr = fopen("tr_vegcat.csv", "w"); //RT to avoid confricts with cevt.c
+  sprintf(s, "./vegcatout/%s_tr.csv", inputFileList);
+  //ftr = fopen("tr_vegcat.csv", "w"); //RT to avoid confricts with cevt.c
+  ftr = fopen(s, "w");
   if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
   fprintf(ftr, "run,evt,seg,ch,val\n");
   for (i = 0; i < numRuns; i++) {
@@ -118,8 +126,11 @@ int main(int argc, char **argv) {
   }
   fclose(ftr); // Center contact will not  be included in this code. If you use cevt.c, CC wave form is also wrote.
 
-  fave = fopen("vegcat_ave.csv", "w");
-  fprintf(fave,"filename, evtnum, avex, avey, avez, aveE\n");
+  //fave = fopen("vegcat_ave.csv", "w");
+  sprintf(s, "./vegcatout/%s_avepos.csv", inputFileList);
+  fave = fopen(s, "w");
+  //fprintf(fave,"filename, evtnum, avex, avey, avez, aveE\n");
+  fprintf(fave,"runnum, segnum, evtnum, avex, avey, avez, aveE\n");
   fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
   for (i = 0; i < numRuns; i++) {
     rawEvts = runList[i].rawEvts;
@@ -141,7 +152,8 @@ int main(int argc, char **argv) {
     }
     fprintf(stdout, "%s, %d evts\n", runList[i].filename, runList[i].numEvts);
     fprintf(stdout, "avex:%f, avey:%f, avez:%f, avee:%f\n\n", ave[0], ave[1], ave[2], ave[3]);
-    fprintf(fave, "%s, %d evts, ", runList[i].filename, runList[i].numEvts);
+    //fprintf(fave, "%s, %d evts, ", runList[i].filename, runList[i].numEvts);
+    fprintf(fave, "%i, %i, %d, ", runList[i].run, runList[i].seg, runList[i].numEvts);
     fprintf(fave, "%f, %f, %f, %f\n", ave[0], ave[1], ave[2], ave[3]);
   }
   fclose(fave);

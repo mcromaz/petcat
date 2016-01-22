@@ -1,0 +1,17 @@
+../coinc-data/WFOUT-Run0111Segment15.dat 111 15
+../coinc-data/WFOUT-Run0113Segment15.dat 113 15
+../coinc-data/WFOUT-Run0114Segment9.dat 114 9
+../coinc-data/WFOUT-Run0114Segment15.dat 114 15
+../coinc-data/WFOUT-Run0125Segment15.dat 125 15
+../coinc-data/WFOUT-Run0126Segment9.dat 126 9
+../coinc-data/WFOUT-Run0126Segment15.dat 126 15
+../coinc-data/WFOUT-Run0142Segment15.dat 142 15
+../coinc-data/WFOUT-Run0143Segment9.dat 143 9
+../coinc-data/WFOUT-Run0143Segment15.dat 143 15
+../coinc-data/WFOUT-Run0148Segment9.dat 148 9
+../coinc-data/WFOUT-Run0148Segment15.dat 148 15
+../coinc-data/WFOUT-Run0149Segment15.dat 149 15
+../coinc-data/WFOUT-Run0150Segment15.dat 150 15
+../coinc-data/WFOUT-Run0160Segment9.dat 160 9
+../coinc-data/WFOUT-Run0160Segment15.dat 160 15
+../coinc-data/WFOUT-Run0161Segment15.dat 161 15

@@ -105,7 +105,7 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset, char 
   int refwf[300];
   int thesegid = 36;
   FILE *foffset;
-  char outname[50];
+  char outname[100];
 
   avgEvt = calloc(1, sizeof(Mario));
   memset(scratch, 0, 37 * 300 * sizeof(float));
@@ -356,7 +356,7 @@ int cevt(double ratio, char *datname1, int runn1, int segn1, char *datname2, int
 
   pList[2].rawEvts = wsum(pList[0].rawEvts, pList[1].rawEvts, ratio);
   
-  char outname[20];
+  char outname[100];
   CFDFlag == 1 ? sprintf(outname, "./cevtout/cevt%s_cfd.dat",suffix) : sprintf(outname, "./cevtout/cevt%s.dat",suffix);
   fou = (appendFlag == 1) ? fopen(outname, "a") : fopen(outname, "w");
   if (fou == 0) { fprintf(stderr, "could not open file %s\n",outname); exit(1);}
@@ -450,7 +450,7 @@ int main(int argc, char **argv) {
   }
   */
   
-  char outname[50];
+  char outname[100];
   if (fileListFlag == 1) {
     CFDFlag ? sprintf(outname,"cevtrunlist_cfd.txt") : sprintf(outname,"cevtrunlist.txt");
     frunlistout = fopen(outname, "w");

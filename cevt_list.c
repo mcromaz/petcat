@@ -110,7 +110,8 @@ Mario *avg_thoffset(struct evtList *x, int baselineFlag, double refoffset, char 
   avgEvt = calloc(1, sizeof(Mario));
   memset(scratch, 0, 37 * 300 * sizeof(float));
 
-  sprintf(outname, "./cevtout/offset/dummy/%s_cfd%s.csv", x->filename, suffix);
+  //sprintf(outname, "./cevtout/offset/dummy/%s_cfd%s.csv", x->filename, suffix);
+  sprintf(outname, "./cevtout/offset/dummy/%s.csv", x->filename);
   //foffset = fopen("output/offset.csv", "w");
   foffset = fopen(outname, "w");
   fprintf(foffset, "\n RefOffset = %f \n evtnum, Offset of the evt, Deltat\n", refoffset);

@@ -88,7 +88,7 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
   for (i = 0; i < 36; i++) {
     wevt->segEnergy[i] = weight * evt0->segEnergy[i] + (1.0 - weight) * evt1->segEnergy[i];
   }
-  wevt->ccEnergy = weight * evt0->ccEnergy + (1 - weight) * evt1->ccEnergy;
+  wevt->ccEnergy = weight * evt0->ccEnergy + (1.0 - weight) * evt1->ccEnergy;
 
   return wevt;
 }

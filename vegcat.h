@@ -9,7 +9,7 @@ struct config {
   char *filterName;
   char *trGainName;
   char *xTalkParsName;
-} cfg = {109, 0, "../coinc/q4a8_basis_xt.dat", "../coinc/detmap_Q4pos4_CC09.txt", "../coinc/filter.txt",
+} cfg = {109, 0, "../coinc/q4a8_basis_xt.dat", "../coinc/detmap_Q4pos4_CC09_Ecal.txt", "../coinc/filter.txt",
 	 "../coinc/tr_gain_Q4pos4_CC09.txt", "../coinc/q4a8_xtalk_pars_in.txt"}; //RT mod
 
 struct gebData {

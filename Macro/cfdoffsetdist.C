@@ -133,19 +133,31 @@ void cfdoffsetdist(void) {
   TvsRresult << "name, function, par0, par1, par2, parerr1, 2, 3"<<endl;
   TvsRresult << "fpar, [0]+[1]*(x-[2])*(x-[2]), "<< fpar->GetParameter(0) <<", "<< fpar->GetParameter(1) <<", "<< fpar->GetParameter(2)
 	     <<", "<< fpar->GetParError(0)  <<", "<< fpar->GetParError(1)  <<", "<< fpar->GetParError(2) <<endl;
-  if(draw) c_gr->Print(Form("%s/TvsR_parabolic_5mmCC.pdf", outname));
+  if(draw) {
+    c_gr->Print(Form("%s/TvsR_parabolic_5mmCC.pdf", outname));
+    c_gr->Print(Form("%s/TvsR_parabolic_5mmCC.png", outname));
+    c_gr->Print(Form("%s/TvsR_parabolic_5mmCC.C", outname));
+  }
   
   gr -> Fit("fpar2", "");
   gr -> Fit("fpar2", "M");
   TvsRresult << "fpar2, pol2, "<< fpar2->GetParameter(0) <<", "<< fpar2->GetParameter(1) <<", "<< fpar2->GetParameter(2)
 	     <<", "<< fpar2->GetParError(0)  <<", "<< fpar2->GetParError(1)  <<", "<< fpar2->GetParError(2) <<endl;
-  if(draw) c_gr->Print(Form("%s/TvsR_para2.pdf", outname));
+  if(draw) {
+    c_gr->Print(Form("%s/TvsR_para2.pdf", outname));
+    c_gr->Print(Form("%s/TvsR_para2.png", outname));
+    c_gr->Print(Form("%s/TvsR_para2.C", outname));
+  }
    
   gr -> Fit("fexp", "");
   gr -> Fit("fexp", "M");
   TvsRresult << "fexp, pol0(0)+expo(1), "<< fexp->GetParameter(0) <<", "<< fexp->GetParameter(1) <<", "<< fexp->GetParameter(2)
 	     <<", "<< fexp->GetParError(0)  <<", "<< fexp->GetParError(1)  <<", "<< fexp->GetParError(2) <<endl;
-  if(draw) c_gr->Print(Form("%s/TvsR_exp.pdf", outname));
+  if(draw) {
+    c_gr->Print(Form("%s/TvsR_exp.pdf", outname));
+    c_gr->Print(Form("%s/TvsR_exp.png", outname));
+    c_gr->Print(Form("%s/TvsR_exp.C", outname));
+  }
   
   //Create several fittings compere ?
 

@@ -14,7 +14,8 @@ struct evtList {
   Mario *rawEvts;
   int numEvts;
 } runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
-                {"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
+                {"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0}};
+                //{"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},
                         {"none", 15, 0, 1},
@@ -308,7 +309,7 @@ int main(int argc, char **argv) {
     runList[i].rawEvts = malloc(MAX_EVT * sizeof(Mario));
   }
 
-  while ((ch = getopt_long(argc, argv, "vsarc:", opts, 0)) != -1) {
+  while ((ch = getopt_long(argc, argv, "vsar:c", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
@@ -322,7 +323,7 @@ int main(int argc, char **argv) {
     case 'c': CFDFlag = 1;
               printf("CFDFalg is now set to 1\n");
               break;
-    default: fprintf(stderr, "usage: cevt [-vsarc:]\n");
+    default: fprintf(stderr, "usage: cevt [-vsar:c]\n");
              exit(1);
     }
   }

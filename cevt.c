@@ -29,7 +29,7 @@ int cfdelay = 10;
 double thoffset[2] = {0.0};
 int threshold = -50;
 
-float cft(Mario *evt){
+/*float cft(Mario *evt){
   double sumwf[300], zerocross;
   float s0, s1;
   int i = 36, j, k;
@@ -68,7 +68,7 @@ float cft(Mario *evt){
     return -1000.;
   }
 }
-
+*/
 
 Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
 

@@ -31,7 +31,7 @@ double thoffset[2] = {0.0};
 int threshold = -50;
 FILE* frunlistout;
 
-
+/*
 float cft(Mario *evt){
   double sumwf[300], zerocross;
   float s0, s1;
@@ -72,7 +72,7 @@ float cft(Mario *evt){
   }
 }
 
-
+*/
 Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
 
   Mario *wevt;

@@ -22,7 +22,8 @@ int main(int argc, char **argv) {
   int holenum, xtalnum;
   char ch;
   int verboseFlag = 0, fileListFlag = 0;
-  int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
+  //int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
+  int stat, numhdr = 0, numevt = 0, maxevt = 10000, num, seg, i, j, k, l;
   char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   const int maxruns = 200;
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
 
   sprintf(s, "./vegcatout/%s_tr.csv", inputFileList);
   //ftr = fopen("tr_vegcat.csv", "w"); //RT to avoid confricts with cevt.c
-  ftr = fopen(s, "w");
+  /*ftr = fopen(s, "w");
   if (ftr == 0) { fprintf(stderr, "could not open file tr.csv\n"); exit(1);}
   fprintf(ftr, "run,evt,seg,ch,val\n");
   for (i = 0; i < numRuns; i++) {
@@ -125,7 +126,7 @@ int main(int argc, char **argv) {
     }
   }
   fclose(ftr); // Center contact will not  be included in this code. If you use cevt.c, CC wave form is also wrote.
-
+  */
   //fave = fopen("vegcat_ave.csv", "w");
   sprintf(s, "./vegcatout/%s_avepos.csv", inputFileList);
   fave = fopen(s, "w");
@@ -134,7 +135,7 @@ int main(int argc, char **argv) {
   fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
   for (i = 0; i < numRuns; i++) {
     rawEvts = runList[i].rawEvts;
-    double ave[4] = {0.0};//RT
+    double ave[5] = {0.0};//RT
     for (j = 0; j < runList[i].numEvts; j++) {
       stat = preProcessMario(rawEvts + j, &e, &pcnt);
       x = dl_decomp(a, &e, &postCnt);
@@ -142,19 +143,20 @@ int main(int argc, char **argv) {
 					      so later rotations, etc.
 					      make sense. */
       for (k = 0; k < x->num; k++) {
-      fprintf(fou, "%d, %d, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f\n", runList[i].run, j + 1, k + 1,
-        x->intpts[k].seg, x->intpts[k].x, x->intpts[k].y, x->intpts[k].z, x->intpts[k].e);
+      fprintf(fou, "%d, %d, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f, %7.2f\n", runList[i].run, j + 1, k + 1,
+	      x->intpts[k].seg, x->intpts[k].x, x->intpts[k].y, x->intpts[k].z, x->intpts[k].e, x->intpts[k].seg_ener); // seg_ener added
       ave[0] += x->intpts[k].x/((double) (x->num * runList[i].numEvts));
       ave[1] += x->intpts[k].y/((double) (x->num * runList[i].numEvts));
       ave[2] += x->intpts[k].z/((double) (x->num * runList[i].numEvts));
       ave[3] += x->intpts[k].e/((double) (x->num * runList[i].numEvts));
+      ave[4] += x->intpts[k].seg_ener/((double) (x->num * runList[i].numEvts));
       }
     }
     fprintf(stdout, "%s, %d evts\n", runList[i].filename, runList[i].numEvts);
-    fprintf(stdout, "avex:%f, avey:%f, avez:%f, avee:%f\n\n", ave[0], ave[1], ave[2], ave[3]);
+    fprintf(stdout, "avex:%f, avey:%f, avez:%f, avee1:%f avee2:%f\n\n", ave[0], ave[1], ave[2], ave[3], ave[4]);
     //fprintf(fave, "%s, %d evts, ", runList[i].filename, runList[i].numEvts);
     fprintf(fave, "%i, %i, %d, ", runList[i].run, runList[i].seg, runList[i].numEvts);
-    fprintf(fave, "%f, %f, %f, %f\n", ave[0], ave[1], ave[2], ave[3]);
+    fprintf(fave, "%f, %f, %f, %f\n", ave[0], ave[1], ave[2], ave[3]);//ave[4] to be added later
   }
   fclose(fave);
   return 0;

@@ -10,7 +10,11 @@ struct config {
   char *trGainName;
   char *xTalkParsName;
 } cfg = {109, 0, "../coinc/q4a8_basis_xt.dat", "../coinc/detmap_Q4pos4_CC09_Ecal.txt", "../coinc/filter.txt",
-	 "../coinc/tr_gain_Q4pos4_CC09.txt", "../coinc/q4a8_xtalk_pars_in.txt"}; //RT mod
+	 "../coinc/tr_gain_basis.txt", "../coinc/q4a8_xtalk_pars_in.txt"}; //RT mod
+
+//RT memo
+//gain in det map = proper gain for FPGA to energy. This will be the "x.seg_e" 
+//Tr gain = adjust rerative energy deduced from trace between all af the segment to same energy. to reconstrtuct multiple hit. "x.e"
 
 struct gebData {
   int type;

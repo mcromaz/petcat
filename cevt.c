@@ -13,8 +13,10 @@ struct evtList {
   int seg;
   Mario *rawEvts;
   int numEvts;
-} runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
-                {"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0}};
+  /*} runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
+    {"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0}};*/
+} runList[2] = {{"./basis/seg15.dat", 15, 0, 0},
+                {"./basis/seg15.dat", 15, 0, 0}};
                 //{"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},
@@ -88,9 +90,11 @@ Mario *wsum(Mario *evt0, Mario *evt1, float weight) {
 
   for (i = 0; i < 36; i++) {
     wevt->segEnergy[i] = weight * evt0->segEnergy[i] + (1.0 - weight) * evt1->segEnergy[i];
+    printf("%i, %f\n",i,wevt->segEnergy[i]);
   }
   wevt->ccEnergy = weight * evt0->ccEnergy + (1.0 - weight) * evt1->ccEnergy;
-
+  printf("CC, %f\n",wevt->ccEnergy);
+  
   return wevt;
 }
 

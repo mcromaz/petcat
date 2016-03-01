@@ -22,7 +22,7 @@ Contact: Ryo Taniuchi taniuchi@nucl.phys.s.u-tokyo.ac.jp / rtaniuchi@lbl.gov
 
 int i, j, k, ii, counter=0;
 int nseg = 15, tOffset=140, tshift=0, numevt =1;
-char *outfilename = "basis/seg15.dat";
+//char *outfilename = "basis/seg15.dat";
 double Shift = 0.,  Noise = 0., Ampl= 5000.;
 //double Shift = 10.,  Noise = 50., Ampl= 5000.;
 
@@ -46,18 +46,32 @@ int main(){
   evts = malloc (numevt * sizeof(Mario));
   oneeve = malloc ( sizeof(Mario));
 
-  fgeo = fopen("inputs/geo_basis.txt", "w");
-  fprintf(fgeo, "runn, x, y, z \n");
-  fdat = fopen(outfilename,"w");
   
   struct decomp_state *a;
   a = dl_decomp_init(cfg.basisName, 1); // 1 to suppress diag info
   if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
+
+  nseg=0;
+  char outfilename[30] = "basis/seg0.dat";
+  fdat = fopen(outfilename,"w");
+  sprintf(outfilename,"inputs/geo_basis%i.txt",0);
+  fgeo = fopen(outfilename, "w");
+  fprintf(fgeo, "runn, x, y, z \n");
   
   for(i=0; i<GRID_PTS; i++){
     //printf("%i %i %f \n",i, basis[i].iseg,  basis[i].signal[0][0]);
     //if(basis[i].iseg == nseg && counter<100 && i%60==0){
-    if(basis[i].iseg == nseg){ //Reconstruct all the signal
+    if(basis[i].iseg > nseg){
+      fclose(fgeo);
+      fclose(fdat);
+      nseg = basis[i].iseg;
+      sprintf(outfilename, "basis/seg%i.dat", nseg);
+      fdat = fopen(outfilename,"w");
+      sprintf(outfilename, "inputs/geo_basis%i.txt",nseg);
+      fgeo = fopen(outfilename, "w");
+      fprintf(fgeo, "runn, x, y, z \n");
+    }
+    //if(basis[i].iseg == nseg){ //Reconstruct all the signal
       //Generate signal
       tshift = tOffset + (int)(Shift * (genrand(i)-0.5) );
       //Ampl = genrand( j * i ); 
@@ -102,9 +116,9 @@ int main(){
 	
 	counter++;
       }
-    }else if(basis[i].iseg > nseg){
+      /*}else if(basis[i].iseg > nseg){
       break;
-    }
+      }*/
   }
   fclose(fgeo);
   fclose(fdat);

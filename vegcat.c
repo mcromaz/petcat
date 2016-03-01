@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "petcat.h"
 #include "vegcat.h"
-#include "neigh.h"
+//#include "neigh.h"
 
 int main(int argc, char **argv) {
 

@@ -502,6 +502,7 @@ struct crys_intpts *dl_decomp(struct decomp_state *di, Event_Signal *asig, postp
     nints = decompose_1(asig, di->bsig, seg[0], di->ints, &t0, &chisq, 0, 1, 1, 1, 1, 1, 1, 1, 0.1);
   }
   else {
+    printf("nseg >1\n");
     nints = decompose_n(asig, di->bsig, nseg, seg, 1, di->ints, &t0, &chisq);
   }
 #endif

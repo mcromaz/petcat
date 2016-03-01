@@ -5,26 +5,61 @@
 using namespace std;
 
 
-const int NUMRUNS=6000;
+const int NUMRUNS=20000;
 char name[] ="basis";
-ifstream poslist("./inputs/geo_basis.txt");
-//ifstream aveposlist(Form("./vegcatout/%s.txt_avepos.csv",name));
-ifstream aveposlist(Form("./vegcatout/%s.txt_out.csv",name));
-
-char dummy, outname[] = Form("./vegcatout/positiondist/%s",name);
 char *index[4] = {"x", "y", "z", "pos"};
 string dummystring;
 int runn[NUMRUNS], runn_poslist[NUMRUNS], segn[NUMRUNS],  dumint;
 double par[2][NUMRUNS], parerr[2][NUMRUNS], x[NUMRUNS], y[NUMRUNS], z[NUMRUNS], r[NUMRUNS], x_list[NUMRUNS], y_list[NUMRUNS], z_list[NUMRUNS], x_meas[NUMRUNS], y_meas[NUMRUNS], z_meas[NUMRUNS], deltapos[NUMRUNS], dumdouble;
 
-TH1F *hx[5], *hy[5], *hz[5], *hpos[4][6];
+TH1F *hx[5], *hy[5], *hz[5], *hpos[36][4][6];
 
-int i, j, k, numpos, draw = 1;
-TCanvas *c;//, *c_gr;
+int i, j, k, numpos, draw = 0;
+TCanvas *c, *cxyz, *cdist;//, *c_gr;
 TGraph *g[4]; //Delta x, y, z, pos
+TLegend *leg;
 void positiondist_basis(void) {
+  cxyz = new TCanvas("cxyz","cxyz",900,600);
+  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf[");
+  cxyz -> Divide(2,2);
+  cdist = new TCanvas("cdist","cdist",900,600);
+  cdist->Print("./vegcatout/positiondist/basis_dist.pdf[");
+  cdist ->Divide(3,2);
+  leg = new TLegend(0.82,0.7,0.92,0.9);
+  
+  for(int segid=0; segid<36; segid++) {
+    //for(int segid=0; segid<6; segid++) {
+    positiondist_basis_id(segid);
 
-  if(!poslist||!aveposlist){
+
+    delete cxyz;
+    cxyz = new TCanvas("cxyz","cxyz",900,600);
+    cxyz -> Divide(2,2);
+    if(segid%6 == 5){ 
+      cdist->cd(0);
+      leg->SetFillColor(0);
+      leg->Draw("");
+      cdist->Print("./vegcatout/positiondist/basis_dist.pdf");
+      delete cdist;
+      cdist = new TCanvas("cdist","cdist",900,600);
+      cdist ->Divide(3,2);
+      delete leg;
+      leg = new TLegend(0.82,0.7,0.92,0.9);
+    }
+  }
+  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf]");
+  cdist->Print("./vegcatout/positiondist/basis_dist.pdf]");
+}
+
+void positiondist_basis_id(int segid) {
+
+  ifstream poslist(Form("./inputs/geo_basis%i.txt",segid));
+  ifstream decoposlist(Form("./vegcatout/%s%i_out.csv",name,segid));
+  
+  char dummy, outname[] = Form("./vegcatout/positiondist/%s%i",name,segid);
+
+
+  if(!poslist||!decoposlist){
     cerr<<"file is not found"<<endl;
     break;
   }
@@ -33,10 +68,10 @@ void positiondist_basis(void) {
   c = new TCanvas("c", "Deviation of measured positions", 900, 600);
 
   for(i=0; i<6; i++){
-    hpos[0][i] = new TH1F(Form("hx%i",i),Form("hx_%ito%i",5*i+5,5*i+5+5),100,-10,10);
-    hpos[1][i] = new TH1F(Form("hy%i",i),Form("hy_%ito%i",5*i+5,5*i+5+5),100,-10,10);
-    hpos[2][i] = new TH1F(Form("hz%i",i),Form("hz_%ito%i",5*i+5,5*i+5+5),100,-10,10);
-    hpos[3][i] = new TH1F(Form("hpos%i",i),Form("hpos_%ito%i",5*i+5,5*i+5+5),100,0,20);
+    hpos[segid][0][i] = new TH1F(Form("hx%i_seg%i",i,segid),Form("hx_%i to %i",5*i+5,5*i+5+5),100,-10,10);
+    hpos[segid][1][i] = new TH1F(Form("hy%i_seg%i",i,segid),Form("hy_%i to %i",5*i+5,5*i+5+5),100,-10,10);
+    hpos[segid][2][i] = new TH1F(Form("hz%i_seg%i",i,segid),Form("hz_%i to %i",5*i+5,5*i+5+5),100,-10,10);
+    hpos[segid][3][i] = new TH1F(Form("hpos%i_seg%i",i,segid),Form("hpos_%i to %i",5*i+5,5*i+5+5),100,0,20);
   }
   
 
@@ -51,80 +86,58 @@ void positiondist_basis(void) {
   numpos = i;
   //////////////////////
 
-  getline(aveposlist, dummystring); //runnum, segnum, evtnum, avex, avey, avez, aveE
-  //cout<<dummystring<<endl;
+  getline(decoposlist, dummystring); //runnum, segnum, evtnum, avex, avey, avez, aveE
   for(k = 0; k < NUMRUNS;  k++){
-    // for(k = 0; k < 1;  k++){
-    //aveposlist >> runn[k] >> dummy >> segn[k] >> dummy >>dumint >> dummy >> x_meas[k] >> dummy >> y_meas[k] >> dummy >> z_meas[k] >> dummy >> dumdouble;
-    aveposlist >> runn[k] >> dummy >> dumint >> dummy >> dumint >>dummy >> segn[k] >> dummy >> x_meas[k] >> dummy >> y_meas[k] >> dummy >> z_meas[k] >> dummy >> dumdouble >> dummy >> dumdouble;
-    //cout << runn[k] << dummy << segn[k] << dummy <<dumint << dummy << x_meas[k] << dummy << y_meas[k] << dummy << z_meas[k] << dummy << dumdouble <<endl;
-    if(dumint!=1) aveposlist >> runn[k] >> dummy >> dumint >> dummy >> dumint >>dummy >> segn[k] >> dummy >> x_meas[k] >> dummy >> y_meas[k] >> dummy >> z_meas[k] >> dummy >> dumdouble >> dummy >> dumdouble;
-    if (!aveposlist) break;
-    //cout << runn[k] << dummy << dumint << dummy << dumint <<dummy << segn[k] << dummy << x_meas[k] << dummy << y_meas[k] << dummy << z_meas[k] << dummy << dumdouble<<endl;
 
-    /// serch matched geometrical information from poslist ///
-    /*for (i = 0; i < numpos + 1; i++){
-      if(i == numpos){
-	cout<<"no position information for run"<<runn[k]<<" is not found"<<endl;
-	x[k] = 0;
-	y[k] = 0;
-	z[k] = 0;
-	r[k] = 0;
-	break;
-	}else if(runn[k] == runn_poslist[i]){*/
+    decoposlist >> runn[k] >> dummy >> dumint >> dummy >> dumint >>dummy >> segn[k] >> dummy >> x_meas[k] >> dummy >> y_meas[k] >> dummy >> z_meas[k] >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble;
+    if(dumint!=1) {
+      k--;
+      continue;
+    }
+    if (!decoposlist) break;
     i=k;
-	x[k] = x_list[i];
-	y[k] = y_list[i];
-	z[k] = z_list[i];
-	r[k] = sqrt(x[k]*x[k]+y[k]*y[k]);
-	x_meas[k] -= x[k]; //Delta x
-	y_meas[k] -= y[k];
-	z_meas[k] -= z[k];
-	deltapos[k] = sqrt(pow(x_meas[k], 2) +  pow(y_meas[k], 2) +  pow(z_meas[k], 2));
-	cout<<k<<" "<<r[k]<<" "<<deltapos[k]<<endl;
+    x[k] = x_list[i];
+    y[k] = y_list[i];
+    z[k] = z_list[i];
+    r[k] = sqrt(x[k]*x[k]+y[k]*y[k]);
+    x_meas[k] -= x[k]; //Delta x
+    y_meas[k] -= y[k];
+    z_meas[k] -= z[k];
+    deltapos[k] = sqrt(pow(x_meas[k], 2) +  pow(y_meas[k], 2) +  pow(z_meas[k], 2));
+    //cout<<k<<" "<<r[k]<<" "<<deltapos[k]<<endl;
 	
-	for(i=0;i<6;i++){
-	  if(r[k]>5.*((double)i+1.)&&r[k]<=5.*((double)i+2.)){
-	    hpos[0][i]->Fill(x_meas[k]);
-	    hpos[1][i]->Fill(y_meas[k]);
-	    hpos[2][i]->Fill(z_meas[k]);
-	    hpos[3][i]->Fill(deltapos[k]);
-	    break;
-	  }
-	  else if(i==5){
-	    cout<<"Error: this point is out of r=35"<<endl;
-	  }
-	}
-
-	/*break;
+    for(i=0;i<6;i++){
+      if(i==5 || r[k]>5.*((double)i+1.)&&r[k]<=5.*((double)i+2.)){
+	hpos[segid][0][i]->Fill(x_meas[k]);
+	hpos[segid][1][i]->Fill(y_meas[k]);
+	hpos[segid][2][i]->Fill(z_meas[k]);
+	hpos[segid][3][i]->Fill(deltapos[k]);
+	break;
       }
-      }*/
+      /*else if(i==5){
+	cout<<"Error: this point is out of r=35"<<endl;
+	}*/
+    }
   }
 
   cout<<endl<<" Numpos = "<<numpos<<" "<<k<<endl;
 
-  //  for (i=0; i<4; i++){
   g[0]= new TGraph(numpos, r, x_meas);
   g[1]= new TGraph(numpos, r, y_meas);
   g[2]= new TGraph(numpos, r, z_meas);
   g[3]= new TGraph(numpos, r, deltapos);
-  /*g[0]= new TGraph(NUMRUNS, r, x_meas);
-  g[1]= new TGraph(NUMRUNS, r, y_meas);
-  g[2]= new TGraph(NUMRUNS, r, z_meas);
-  g[3]= new TGraph(NUMRUNS, r, deltapos);
-*/
+
   if(draw) c->Print(Form("%s.pdf[",outname));
   for (i=0; i<4; i++){
-    //h[i] = new TH2F(Form("h%i", i), Form("#Delta%s vs Radius",index[i]), 100, 0, 30, );
     g[i] -> SetTitle(Form("#Delta%s vs Radius",index[i]));
     g[i] -> GetXaxis() -> SetTitle("Radius / mm");
     g[i] -> GetYaxis() -> SetTitle(Form("#Delta%s / mm",index[i]));
-    g[i] -> GetXaxis() -> SetLimits(0,35.);
-    //g[i] -> SetMarkerStyle(21);
+    g[i] -> GetXaxis() -> SetLimits(0,40.);
+    g[i] -> SetMinimum(-30.);
+    g[i] -> SetMaximum(30.);
     g[i] -> Draw("AP*");
     if(draw) c->Print(Form("%s.pdf",outname));
   }
-  //c->Clear();
   delete c;
   c = new TCanvas("c", "Deviation of measured positions hist", 900, 600);
   c->Divide(3,2);
@@ -133,14 +146,37 @@ void positiondist_basis(void) {
   for (i=0; i<4; i++){
     for (j=0; j<6; j++){
       c->cd(j+1);
-      hpos[i][j]->Draw("");
-      if(i!=3) hpos[i][j]->Fit("gaus","Q");
+      hpos[segid][i][j]->Draw("");
+      if(i!=3) hpos[segid][i][j]->Fit("gaus","Q");
     }
     if(draw) c->Print(Form("%s.pdf",outname));
   }
   
   if(draw) c->Print(Form("%s.pdf]",outname));
 
+  delete c;
+
+  for(i=0; i<4; i++){
+    cxyz->cd(i+1);
+    g[i]->Draw("AP*");
+  }
+  i=3;
+  for (j=0; j<6; j++){
+    cdist->cd(j+1);
+    hpos[segid][i][j]->SetLineColor(segid%6+1);
+    if (segid%6==0){
+      hpos[segid][i][j]->Draw("");
+    }else hpos[segid][i][j]->Draw("same");
+  }
+  leg->AddEntry(hpos[segid][i][0],Form("seg%i",segid),"l");
+    
+  //if(draw) 
+  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf");
+   
+
+  for (i=0; i<4; i++){
+    delete g[i];
+  }
 }
 
 

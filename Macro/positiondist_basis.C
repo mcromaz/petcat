@@ -6,7 +6,7 @@ using namespace std;
 
 
 const int NUMRUNS=20000;
-char name[] ="basis";
+char name[] ="basis_PF0";
 char *index[4] = {"x", "y", "z", "pos"};
 string dummystring;
 int runn[NUMRUNS], runn_poslist[NUMRUNS], segn[NUMRUNS],  dumint;
@@ -19,11 +19,11 @@ TCanvas *c, *cxyz, *cdist;//, *c_gr;
 TGraph *g[4]; //Delta x, y, z, pos
 TLegend *leg;
 void positiondist_basis(void) {
-  cxyz = new TCanvas("cxyz","cxyz",900,600);
-  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf[");
+  cxyz = new TCanvas("cxyz","cxyz",1050,800);
+  cxyz->Print(Form("./vegcatout/positiondist/%s_xyzdist.pdf[",name));
   cxyz -> Divide(2,2);
-  cdist = new TCanvas("cdist","cdist",900,600);
-  cdist->Print("./vegcatout/positiondist/basis_dist.pdf[");
+  cdist = new TCanvas("cdist","cdist",1050,800);
+  cdist->Print(Form("./vegcatout/positiondist/%s_dist.pdf[",name));
   cdist ->Divide(3,2);
   leg = new TLegend(0.82,0.7,0.92,0.9);
   
@@ -33,22 +33,22 @@ void positiondist_basis(void) {
 
 
     delete cxyz;
-    cxyz = new TCanvas("cxyz","cxyz",900,600);
+    cxyz = new TCanvas("cxyz","cxyz",1050,800);
     cxyz -> Divide(2,2);
     if(segid%6 == 5){ 
       cdist->cd(0);
       leg->SetFillColor(0);
       leg->Draw("");
-      cdist->Print("./vegcatout/positiondist/basis_dist.pdf");
+      cdist->Print(Form("./vegcatout/positiondist/%s_dist.pdf",name));
       delete cdist;
-      cdist = new TCanvas("cdist","cdist",900,600);
+      cdist = new TCanvas("cdist","cdist",1050,800);
       cdist ->Divide(3,2);
       delete leg;
       leg = new TLegend(0.82,0.7,0.92,0.9);
     }
   }
-  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf]");
-  cdist->Print("./vegcatout/positiondist/basis_dist.pdf]");
+  cxyz->Print(Form("./vegcatout/positiondist/%s_xyzdist.pdf]",name));
+  cdist->Print(Form("./vegcatout/positiondist/%s_dist.pdf]",name));
 }
 
 void positiondist_basis_id(int segid) {
@@ -171,7 +171,7 @@ void positiondist_basis_id(int segid) {
   leg->AddEntry(hpos[segid][i][0],Form("seg%i",segid),"l");
     
   //if(draw) 
-  cxyz->Print("./vegcatout/positiondist/basis_xyzdist.pdf");
+  cxyz->Print(Form("./vegcatout/positiondist/%s_xyzdist.pdf",name));
    
 
   for (i=0; i<4; i++){

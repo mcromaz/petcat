@@ -71,7 +71,8 @@ int main(int argc, char **argv) {
   }
 
   if (fileListFlag == 1) {
-    fl = fopen(inputFileList, "r");
+    sprintf(s, "%s.txt", inputFileList);
+    fl = fopen(s, "r");
     if (fl == 0) { fprintf(stderr, "could not open file %s\n", inputFileList); exit(1);}
     cnt = 0;
     //while (cnt < maxruns && fgets(s, 80, fl) != 0) {
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
   
   numRuns = 1;
   //assert(( fou = fopen("out.csv", "w")) != 0);
-  sprintf(s, "./vegcatout/basis%i_out.csv", seg);
+  sprintf(s, "./vegcatout/%s%i_out.csv",inputFileList, seg);
   assert((fou = fopen(s, "w")) != 0);
 
   stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  sprintf(s, "./vegcatout/basis%i_avepos.csv", seg);
+  sprintf(s, "./vegcatout/%s%i_avepos.csv",inputFileList, seg);
   fave = fopen(s, "w");
   //fprintf(fave,"filename, evtnum, avex, avey, avez, aveE\n");
   fprintf(fave,"runnum, segnum, evtnum, avex, avey, avez, aveE\n");

@@ -34,10 +34,16 @@ FILE *mat_file, *pos_file;
 /* Penalty factor for 2 interactions compared to 1 interaction (net=1), was 1 */
 #define PENALTY1  ((best == 6) ? 0.97f : 1.0f)
 /* Penalty factor for 3 interactions compared to 2 interactions (net=1), was 0.98 */
-#define PENALTY2 0.97f
+#define PENALTY2  0.97f
 /* Penalty factors for 2 interactions compared to 1 interaction (net=2), was 0.98 for both */
-#define PENALTY3 0.97f
-#define PENALTY4 ((best == jfit-1) ? 1.0f : PENALTY3)
+#define PENALTY3  0.97f
+#define PENALTY4  ((best == jfit-1) ? 1.0f : PENALTY3)
+/*
+#define PENALTY1  0.0f//((best == 6) ? 0.97f : 1.0f)
+#define PENALTY2  0.0f//0.97f
+#define PENALTY3  0.0f//0.97f
+#define PENALTY4  0.0f//((best == jfit-1) ? 1.0f : PENALTY3)
+*/
 
 Basis_Point   *basis;                 /* basis-signal data */
 int           grid_pos_lu[SSEG][MAX_SRAD][MAX_SPHI][MAX_SZZZ];    /* basis-grid position look-up table */

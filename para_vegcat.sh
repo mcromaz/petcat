@@ -52,7 +52,7 @@ myfunc()
 {
     dir=~/work/petcat-rt/
     cd $dir
-    ./vegcat_basis -s $1 -l basis.txt >>/dev/null
+    ./vegcat_basis -s $1 -l basis >>/dev/null
     echo $1' was finished.'
 }
 

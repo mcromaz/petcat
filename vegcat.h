@@ -1,17 +1,6 @@
 #ifndef _vegcat_h
 #define _vegcat_h
 
-struct config {
-  int holenum;
-  int xtalnum;
-  char *basisName;
-  char *detMapName;
-  char *filterName;
-  char *trGainName;
-  char *xTalkParsName;
-} cfg = {109, 0, "q4a8_basis_xt.dat", "detmap_Q4pos4_CC09.txt", "filter.txt",
-      "tr_gain_Q4pos4_CC09.txt", "q4a8_xtalk_pars_in.txt"};
-
 struct gebData {
   int type;
   int length;
@@ -25,6 +14,22 @@ typedef struct {
   short wf[37][300];
 } Mario;
 
+typedef struct {
+  float cc_ener;
+  float tr_len;
+  float seg_ener[36];
+  float tr[37][1024];
+} m3eb; //mode 3, event-built
+
 int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt);
+
+/* single interaction */
+
+typedef struct sdiag {
+  int stat;
+} sdiag;
+
+void sint_init(char *basisName, char *trGainName);
+struct crys_intpts *sint(Mario *m, sdiag *sd);
 
 #endif

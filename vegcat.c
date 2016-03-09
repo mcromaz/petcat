@@ -17,14 +17,16 @@ int main(int argc, char **argv) {
   Event_Signal e;
   struct decomp_state *a;
   struct crys_intpts *x;
+  sdiag *sd;
   preprocCnt pcnt;
   postprocCnt postCnt;
   int holenum, xtalnum;
   char ch;
-  int verboseFlag = 0, fileListFlag = 0;
+  int verboseFlag = 0, fileListFlag = 0, sintFlag = 0;
   int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
   char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
+                          {"sint", no_argument, 0, 's'},
                           {"filename", required_argument, 0, 'f'},
                           {"numevts", required_argument, 0, 'n'},
                           {"filelist", required_argument, 0, 'l'},
@@ -37,10 +39,23 @@ int main(int argc, char **argv) {
     int numEvts;
   } runList[32];
 
-  while ((ch = getopt_long(argc, argv, "vf:l:n:", opts, 0)) != -1) {
+  struct config {
+    int holenum;
+    int xtalnum;
+    char *basisName;
+    char *detMapName;
+    char *filterName;
+    char *trGainName;
+    char *xTalkParsName;
+  } cfg = {109, 0, "../coinc/q4a8_basis_xt.dat", "../coinc/detmap_Q4pos4_CC09.txt", "../coinc/filter.txt",
+        "../coinc/tr_gain_Q4pos4_CC09.txt", "../coinc/q4a8_xtalk_pars_in.txt"};
+
+  while ((ch = getopt_long(argc, argv, "vsf:l:n:", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
+              break;
+    case 's': sintFlag = 1;
               break;
     case 'f': inputFile = optarg;
               break;
@@ -79,12 +94,16 @@ int main(int argc, char **argv) {
 
   assert(( fou = fopen("out.csv", "w")) != 0);
 
-  stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
-           cfg.xTalkParsName);
-  if (stat < 0) { fprintf(stderr, "startPreProcess failed!\n"); exit(1); }
-
-  a = dl_decomp_init(cfg.basisName, 1); // 1 to suppress diag info
-  if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
+  if (sintFlag == 1) {
+    sint_init(cfg.basisName, cfg.trGainName);
+  }
+  else {        /* std decomp init */
+    stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
+             cfg.xTalkParsName);
+    if (stat < 0) { fprintf(stderr, "startPreProcess failed!\n"); exit(1); }
+    a = dl_decomp_init(cfg.basisName, 1); // 1 to suppress diag info
+    if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
+  }
 
   for (i = 0; i < numRuns; i++) {
     fin = fopen(runList[i].filename, "r");
@@ -118,17 +137,24 @@ int main(int argc, char **argv) {
   }
   fclose(ftr);
 
-  fprintf(fou, "run, evt, int, seg, x, y, z, e\n");
+  sd = calloc(1, sizeof(sdiag));  /* single interaction diagnositcs */
+
+  fprintf(fou, "run, evt, tled, int, seg, x, y, z, e\n");
   for (i = 0; i < numRuns; i++) {
     rawEvts = runList[i].rawEvts;
     for (j = 0; j < runList[i].numEvts; j++) {
-      stat = preProcessMario(rawEvts + j, &e, &pcnt);
-      x = dl_decomp(a, &e, &postCnt);
+      if (sintFlag == 0) {
+        stat = preProcessMario(rawEvts + j, &e, &pcnt);
+        x = dl_decomp(a, &e, &postCnt);
+      } else {
+        x = sint(rawEvts + j, sd);
+        exit(1); // hack
+      }
       x->crystal_id = cfg.holenum * 4 + cfg.xtalnum; /* HLC -- Set crystal_id properly
 					      so later rotations, etc.
 					      make sense. */
       for (k = 0; k < x->num; k++) {
-      fprintf(fou, "%d, %d, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f\n", runList[i].run, j + 1, k + 1,
+      fprintf(fou, "%d, %d, %5.1f, %d, %d, %5.2f, %5.2f, %5.2f, %7.2f\n", runList[i].run, j + 1, x->cfd, k + 1,
         x->intpts[k].seg, x->intpts[k].x, x->intpts[k].y, x->intpts[k].z, x->intpts[k].e);
       }
     }

@@ -6,7 +6,7 @@ using namespace std;
 
 
 const int NUMRUNS=20000;
-char name[] ="basis_PF0";
+char name[] ="basis_grid2fit34Finalfit_";
 char *index[4] = {"x", "y", "z", "pos"};
 string dummystring;
 int runn[NUMRUNS], runn_poslist[NUMRUNS], segn[NUMRUNS],  dumint;
@@ -28,7 +28,7 @@ void positiondist_basis(void) {
   leg = new TLegend(0.82,0.7,0.92,0.9);
   
   for(int segid=0; segid<36; segid++) {
-    //for(int segid=0; segid<6; segid++) {
+    //for(int segid=0; segid<1; segid++) {
     positiondist_basis_id(segid);
 
 
@@ -80,7 +80,14 @@ void positiondist_basis_id(int segid) {
   getline(poslist, dummystring); //runn, x, y, z
   while(true){
     poslist >> runn_poslist[i] >> dummy >> x_list[i] >> dummy >> y_list[i] >> dummy >> z_list[i];
-    if(i == NUMRUNS-1 || !poslist) break; 
+    //cout << runn_poslist[i] << dummy << x_list[i] << dummy << y_list[i] << dummy << z_list[i] <<endl;
+    if(i == NUMRUNS-1 || !poslist) {
+      /*if(!poslist) { cout<<"numpos ="<<i<<endl;
+      }else{
+	cout<<"error"<<endl;
+	}*/
+      break; 
+    }
     i++;
   }
   numpos = i;
@@ -92,14 +99,29 @@ void positiondist_basis_id(int segid) {
     decoposlist >> runn[k] >> dummy >> dumint >> dummy >> dumint >>dummy >> segn[k] >> dummy >> x_meas[k] >> dummy >> y_meas[k] >> dummy >> z_meas[k] >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble >> dummy >> dumdouble;
     if(dumint!=1) {
       k--;
+      //cout<<"dumint="<<dumint<<endl;
       continue;
     }
-    if (!decoposlist) break;
+    if (!decoposlist) {
+      cout<<"End of decomp list: numpos ="<<numpos<<", numdecomp ="<<k<<endl;
+      break;
+    }
+    //if(runn_poslist[k]!=k) cout<<runn_poslist[k]<<" "<<k<<endl;
     i=k;
     x[k] = x_list[i];
     y[k] = y_list[i];
     z[k] = z_list[i];
     r[k] = sqrt(x[k]*x[k]+y[k]*y[k]);
+    /*    if(k>0&&(abs(x[k]-x_meas[k])>abs(x[k]-x_meas[k-1])||abs(x[k]-x_meas[k])>abs(x[k-1]-x_meas[k]))){
+      cout<<"strangex:"<<k<<endl;
+    }
+    if(k>0&&(abs(y[k]-y_meas[k])>abs(y[k]-y_meas[k-1])||abs(y[k]-y_meas[k])>abs(y[k-1]-y_meas[k]))){
+      cout<<"strangey:"<<k<<endl;
+    }
+    if(k>0&&(abs(z[k]-z_meas[k])>abs(z[k]-z_meas[k-1])||abs(z[k]-z_meas[k])>abs(z[k-1]-z_meas[k]))){
+      cout<<"strangez:"<<k<<endl;
+    }
+    */
     x_meas[k] -= x[k]; //Delta x
     y_meas[k] -= y[k];
     z_meas[k] -= z[k];
@@ -120,7 +142,7 @@ void positiondist_basis_id(int segid) {
     }
   }
 
-  cout<<endl<<" Numpos = "<<numpos<<" "<<k<<endl;
+  cout<<endl<<" Numpos = "<<numpos<<" k="<<k<<endl<<endl;
 
   g[0]= new TGraph(numpos, r, x_meas);
   g[1]= new TGraph(numpos, r, y_meas);

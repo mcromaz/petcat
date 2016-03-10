@@ -505,6 +505,7 @@ struct crys_intpts *dl_decomp(struct decomp_state *di, Event_Signal *asig, postp
 #else
   /* branch according to number of hit segments */
   if (nseg == 1) {
+    //nints = decompose_1(asig, di->bsig, seg[0], di->ints, &t0, &chisq, 0, 1, 1, 1, 0, 0, 1, 1, 0.1);
     nints = decompose_1(asig, di->bsig, seg[0], di->ints, &t0, &chisq, 0, 1, 1, 1, 1, 1, 1, 1, 0.1);
   }
   else {

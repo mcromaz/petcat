@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
            cfg.xTalkParsName);
   if (stat < 0) { fprintf(stderr, "startPreProcess failed!\n"); exit(1); }
 
+  //a = dl_decomp_init(cfg.basisName, 0); // 1 to suppress diag info
   a = dl_decomp_init(cfg.basisName, 1); // 1 to suppress diag info
   if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
 

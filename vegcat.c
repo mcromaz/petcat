@@ -21,8 +21,9 @@ int main(int argc, char **argv) {
   preprocCnt pcnt;
   postprocCnt postCnt;
   int holenum, xtalnum;
+  Basis_Point *b;
   char ch;
-  int verboseFlag = 0, fileListFlag = 0, sintFlag = 0;
+  int verboseFlag = 0, fileListFlag = 0, sintFlag = 0, testFlag = 0;
   int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
   char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
                           {"filename", required_argument, 0, 'f'},
                           {"numevts", required_argument, 0, 'n'},
                           {"filelist", required_argument, 0, 'l'},
+                          {"debug", no_argument, 0, 'd'},
                           { 0, 0, 0, 0}};
   struct {
     char *filename;
@@ -50,7 +52,7 @@ int main(int argc, char **argv) {
   } cfg = {109, 0, "../coinc/q4a8_basis_xt.dat", "../coinc/detmap_Q4pos4_CC09.txt", "../coinc/filter.txt",
         "../coinc/tr_gain_Q4pos4_CC09.txt", "../coinc/q4a8_xtalk_pars_in.txt"};
 
-  while ((ch = getopt_long(argc, argv, "vsf:l:n:", opts, 0)) != -1) {
+  while ((ch = getopt_long(argc, argv, "vsf:l:n:t", opts, 0)) != -1) {
     switch(ch) {
     case 'v': verboseFlag = 1;
               fprintf(stdout, "I'm verbose ..\n");
@@ -64,11 +66,37 @@ int main(int argc, char **argv) {
               break;
     case 'n': maxevt = atoi(optarg);
               break;
+    case 't': testFlag = 1;
+              break;
     default: fprintf(stderr, "usage: vegcat [-vf:l:n:]\n");
              exit(1);
     }
   }
   printf("vegcat\n");
+
+  if (testFlag == 1) {
+    fprintf(stdout, "basis test\n");
+    (void) read_basis(cfg.basisName);
+    cnt = 0;
+    for (i = 0; i < MAX_SRAD; i++) {
+      for (j = 0; j < MAX_SPHI; j++) {
+        for (k = 0; k < MAX_SZZZ; k++) {
+          if (grid_pos_lu[15][i][j][k] > 0) {
+            b = basis + grid_pos_lu[15][i][j][k];
+            // convert b to event signal
+            memset(&e, 0, sizeof(Event_Signal));
+            memcpy(&(e.signal[0][0]), &(b->signal[0][0]), 37 * 50 * sizeof(float));
+            e.total_energy = e.seg_energy[15] = 1000.;
+            e.core_e[0] = 1000.;
+            x = dl_decomp(a, &e, &postCnt);
+            cnt++;
+          }
+        }
+      }
+    }
+    fprintf(stdout, "cnt = %d\n", cnt);
+    exit(1);
+  }
 
   for (i = 0; i < 32; i++) {
     runList[i].rawEvts = malloc(maxevt * sizeof(Mario));

@@ -21,9 +21,9 @@ Contact: Ryo Taniuchi taniuchi@nucl.phys.s.u-tokyo.ac.jp / rtaniuchi@lbl.gov
 #include "neigh.h"
 
 int i, j, k, ii, counter=0;
-int nseg = 15, tOffset=140, tshift=0, numevt =1;
-//char *outfilename = "basis/seg15.dat";
-double Shift = 0.,  Noise = 0., Ampl= 5000.;
+int nseg = 15, tOffset=120, tshift=0, numevt =1;
+char *outdir = "basis_noise";
+double Shift = 0.,  Noise = 50., Ampl= 4000.;
 //double Shift = 10.,  Noise = 50., Ampl= 5000.;
 
 Mario *evts, *oneeve;
@@ -52,9 +52,10 @@ int main(){
   if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
 
   nseg=0;
-  char outfilename[30] = "basis/seg0.dat";
+  char outfilename[30];// = "basis/seg0.dat";
+  sprintf(outfilename, "%s/seg%i.dat", outdir, 0);
   fdat = fopen(outfilename,"w");
-  sprintf(outfilename,"inputs/geo_basis%i.txt",0);
+  sprintf(outfilename, "inputs/geo_%s%i.txt",outdir, 0);
   fgeo = fopen(outfilename, "w");
   fprintf(fgeo, "runn, x, y, z \n");
   
@@ -65,9 +66,9 @@ int main(){
       fclose(fgeo);
       fclose(fdat);
       nseg = basis[i].iseg;
-      sprintf(outfilename, "basis/seg%i.dat", nseg);
+      sprintf(outfilename, "%s/seg%i.dat", outdir, nseg);
       fdat = fopen(outfilename,"w");
-      sprintf(outfilename, "inputs/geo_basis%i.txt",nseg);
+      sprintf(outfilename, "inputs/geo_%s%i.txt",outdir, nseg);
       fgeo = fopen(outfilename, "w");
       fprintf(fgeo, "runn, x, y, z \n");
     }

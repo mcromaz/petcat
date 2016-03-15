@@ -1,0 +1,6 @@
+./basis_wevt/seg15_1.dat 1 15
+./basis_wevt/seg15_2.dat 2 15
+./basis_wevt/seg15_4.dat 4 15
+./basis_wevt/seg15_6.dat 6 15
+./basis_wevt/seg15_8.dat 8 15
+./basis_wevt/seg15_9.dat 9 15

@@ -52,13 +52,13 @@ myfunc()
 {
     dir=~/work/petcat-rt/
     cd $dir
-    ./vegcat_basis -s $1 -l basis_grid2fit34Finalfit_ >>/dev/null
+    ./vegcat_basis -s $1 -l basis_2sig15 >>/dev/null
     echo $1' was finished.'
 }
 
 initialize(){
 scons
-for eachseg in {0..35}
+for eachseg in 1 2 4 6 8 9 #{0..35}
 do
     local list=$list' '$eachseg
 done

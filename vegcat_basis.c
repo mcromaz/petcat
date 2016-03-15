@@ -8,6 +8,7 @@
 //#include "neigh.h"
 
 int main(int argc, char **argv) {
+  char *outdir="Mar14";
 
   FILE *fin, *fou, *ftr, *fl, *fave;
   char *inputFile, *inputFileList, s[200];
@@ -79,7 +80,8 @@ int main(int argc, char **argv) {
     while ( fgets(s, 80, fl) != 0) {
       numTok = sscanf(s, "%s %d %d", runList[cnt].filename, &runList[cnt].run, &runList[cnt].seg);
       if (numTok != 3) { fprintf(stderr, "wrong fmt - line %d, %s\n", cnt + 1, inputFileList); exit(1);}
-      if (runList[cnt].seg == seg) break;
+      //if (runList[cnt].seg == seg) break;
+      if (runList[cnt].run == seg) break; //this alos compatible
       //cnt++;
     }
   } else {
@@ -92,7 +94,7 @@ int main(int argc, char **argv) {
   
   numRuns = 1;
   //assert(( fou = fopen("out.csv", "w")) != 0);
-  sprintf(s, "./vegcatout/%s%i_out.csv",inputFileList, seg);
+  sprintf(s, "./%s/%s%i_out.csv", outdir, inputFileList, seg);
   assert((fou = fopen(s, "w")) != 0);
 
   stat = startPreProcess(100, cfg.detMapName, cfg.filterName, cfg.trGainName,
@@ -118,7 +120,7 @@ int main(int argc, char **argv) {
     fclose(fin);
   }
 
-  sprintf(s, "./vegcatout/%s%i_avepos.csv",inputFileList, seg);
+  sprintf(s, "./%s/%s%i_avepos.csv",outdir, inputFileList, seg);
   fave = fopen(s, "w");
   //fprintf(fave,"filename, evtnum, avex, avey, avez, aveE\n");
   fprintf(fave,"runnum, segnum, evtnum, avex, avey, avez, aveE\n");

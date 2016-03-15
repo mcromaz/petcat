@@ -7,4 +7,5 @@ dbg.Program(["vegcat_basis.c", "preproc.c", "talign.c", "decompose.c", "grid.c",
 dbg.Program(["mksig.c",  "preproc.c", "talign.c", "decompose.c", "grid.c", "fitter.c", "eval.c", "interpolate.c", "matinv.c", "read_basis.c", "utils.c", "config.c", "fal.c", "diagcnt.c", "log.c", "lh.c", "wrap.c"])
 dbg.Program(["cevt.c", "t_cfd_simple.c"])
 dbg.Program(["cevt_list.c","t_cfd_simple.c"])
+dbg.Program(["cevt_basis.c","t_cfd_simple.c"])
 dbg.Program(["basisPts.c"])

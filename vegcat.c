@@ -3,6 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <assert.h>
+#include <math.h>
 #include "petcat.h"
 #include "vegcat.h"
 #include "neigh.h"
@@ -11,7 +12,7 @@ int main(int argc, char **argv) {
 
   FILE *fin, *fou, *ftr, *fl;
   char *inputFile, *inputFileList, s[80];
-  int cnt, numTok, numRuns;
+  int cnt, cnt1, cnt2, cnt3, numTok, numRuns;
   struct gebData ghdr;
   Mario *rawEvts, *evt;
   Event_Signal e;
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
   Basis_Point *b;
   char ch;
   int verboseFlag = 0, fileListFlag = 0, sintFlag = 0, testFlag = 0;
-  int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l;
+  int stat, numhdr = 0, numevt = 0, maxevt = 100, num, seg, i, j, k, l, m, n;
   char seglabel[] = {'n', 'l', 'r', 'u', 'd'};
   struct option opts[] = {{"verbose", no_argument, 0, 'v'},
                           {"sint", no_argument, 0, 's'},
@@ -75,26 +76,48 @@ int main(int argc, char **argv) {
   printf("vegcat\n");
 
   if (testFlag == 1) {
+    fou = fopen("test1.csv", "w");
+    assert(fou != 0);
+    fprintf(fou, "x0,y0,z0,dx,dy,dz\n");
     fprintf(stdout, "basis test\n");
-    (void) read_basis(cfg.basisName);
-    cnt = 0;
+    a = dl_decomp_init(cfg.basisName, 1); // 1 to suppress diag info
+    if (a == 0) { fprintf(stderr, "decomp init failed!\n"); exit(1); }
+    //(void) read_basis(cfg.basisName);
+    cnt = 0, cnt1 = 0, cnt2 = 0;
     for (i = 0; i < MAX_SRAD; i++) {
       for (j = 0; j < MAX_SPHI; j++) {
         for (k = 0; k < MAX_SZZZ; k++) {
-          if (grid_pos_lu[15][i][j][k] > 0) {
-            b = basis + grid_pos_lu[15][i][j][k];
+          if (grid_pos_lu[3][i][j][k] > 0) {
+            b = basis + grid_pos_lu[3][i][j][k];
             // convert b to event signal
             memset(&e, 0, sizeof(Event_Signal));
-            memcpy(&(e.signal[0][0]), &(b->signal[0][0]), 37 * 50 * sizeof(float));
-            e.total_energy = e.seg_energy[15] = 1000.;
-            e.core_e[0] = 1000.;
+            for (m = 0; m < 37; m++) {
+              for (n = 0; n < 50; n++) {
+                e.signal[m][n] = b->signal[m][n];
+              }
+            }
+            e.total_energy = 1000.;
+            e.seg_energy[3] = 1000.;
+            e.core_e[0] = e.core_e[1] = e.core_e[2] = e.core_e[3] = 1000.;
             x = dl_decomp(a, &e, &postCnt);
+            if (x->num == 1) {
+              fprintf(fou, "%f,%f,%f,%f,%f,%f\n", b->x, b->y, b->z,
+                fabs(b->x - x->intpts[0].x), fabs(b->y - x->intpts[0].y),
+                fabs(b->z - x->intpts[0].z));
+              cnt1++;
+            }
+            if (x->num == 2) {
+              cnt2++;
+              fprintf(stdout, "%f,%f,%f\n", b->x, b->y, b->z);
+            }
+            if (x->num == 3) { cnt3++; }
+            //printf("cnt = %d, x->num = %d\n", cnt, x->num);
             cnt++;
           }
         }
       }
     }
-    fprintf(stdout, "cnt = %d\n", cnt);
+    fprintf(stdout, "cnt = %d, cnt1 = %d, cnt2 = %d, cnt3 = %d\n", cnt, cnt1, cnt2, cnt3);
     exit(1);
   }
 

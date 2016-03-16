@@ -15,8 +15,8 @@ struct evtList {
   int numEvts;
   /*} runList[2] = {{"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0},
     {"../coinc-data/WFOUT-Run0111Segment15.dat", 15, 0, 0}};*/
-} runList[2] = {{"./basis/seg15.dat", 15, 0, 0},
-                {"./basis/seg15.dat", 15, 0, 0}};
+} runList[2] //= {{"./basis/seg15.dat", 15, 0, 0},{"./basis/seg15.dat", 15, 0, 0}};
+= {{"./basis_noise/seg15.dat", 15, 0, 0}, {"./basis_noise/seg15.dat", 15, 0, 0}};
                 //{"../coinc-data/WFOUT-Run0113Segment15.dat", 15, 0, 0}};
 
 struct evtList pList[] = {{"none", 15, 0, 1},

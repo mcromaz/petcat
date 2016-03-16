@@ -4,11 +4,12 @@
 #include <iostream>
 using namespace std;
 
-ifstream trcsv("./tr_cfd.csv");
-char outname[] = "./output/withCFD";
+//ifstream trcsv("./tr_cfd.csv");
+//char outname[] = "./output/withCFD";
 
-//ifstream trcsv("./tr.csv");
+ifstream trcsv("./tr.csv");
 //char outname[] = "./output/withoutCFD";
+char outname[] = "./basis_noise/tr15";
 
 char dummy, evt, seg;
 int ch, val, dumint = 0;
@@ -61,10 +62,10 @@ void tr2hist(void) {
       h[k] -> GetXaxis() -> SetTitle("time / 10 ns");
       h[k] -> GetYaxis() -> SetTitle("ADC val / a.u.");
       if (j == 0 || j == 5) {
-	h[k] -> SetMaximum(1000);
+	h[k] -> SetMaximum(5500);
 	h[k] -> SetMinimum(-100);
       } else {
-	h[k] -> SetMaximum(200);
+	h[k] -> SetMaximum(1000);
 	h[k] -> SetMinimum(-200);
       }
     }

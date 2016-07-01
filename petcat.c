@@ -11,7 +11,7 @@
 #include "diagcnt.h"
 #include "wrap.h"
 #include "lh.h"
-
+extern int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt);
 int h[4096];
 
 int gotsignal = 0;
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   unsigned short int *buf;
   Event_Signal e;
   int ie;
-  int inclevtlen, len, num, i;
+  int inclevtlen, len = 0, num, i;
   long long int lenLong;
   int numxtalevts = 0;
   FILE *fin, *fou, *fspn, *fcfg;
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 
   buf = Calloc(OBUF_LEN, sizeof(unsigned short int));
 
-  inclevtlen = get_evt_len(fin);
+  inclevtlen = 286; //get_evt_len(fin);
   fprintf(stdout, "inclevtlen = %d (in short ints) for %s \n", inclevtlen, inputFile);
 
   stat = startPreProcess(inclevtlen, detMapFile, filterFile, trGainFile, xTalkParsFile);
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
   e.total_energy = 1;
   while (((holenum > 100 && (lenLong = readMarioFormat(fin, mario, cnt)) > 0 && !gotsignal)) ||
 	 ((len = read3(fin, holenum, xtalnum, buf, cnt)) > 0 && !gotsignal && holenum < 100)) {
-    fprintf(stdout, "-- read3(), len = %d\n", len);
+    //fprintf(stdout, "-- read3(), len = %d\n", len);
     new = 1;
     if (holenum < 100) {
       while ( (holenum < 100 && (stat = preProcess(buf, len, inclevtlen, &e, new, pcnt)) >= 0 && !gotsignal) ) {

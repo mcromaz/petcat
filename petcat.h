@@ -4,9 +4,12 @@
 #include <stdio.h>
 #include "diagcnt.h"
 
-#define TOT_SEGS 36
-#define MEAS_SEGS 37
-#define MAX_TIME_STEPS 50
+#ifdef SAMPLE25
+  #define MAX_TIME_STEPS 25
+#else
+  #define MAX_TIME_STEPS 50
+#endif
+
 #define MAX_TR_LEN 1024
 #define FULL 0xffffffffffll   /* 40 bits set - build all digitizer ch */
 #define NSIGS 37
@@ -26,7 +29,6 @@
 #define MAX_GRID_PTS   250000  /* max number of grid points in a basis */
 #define MAX_GRID_SEGS  37 /* max of signals calculated for each basis point */
 #define MEAS_SEGS  37      /* number of signals measured for each event */
-#define MAX_TIME_STEPS 50      /* max number of time steps calculated/measured for each segment */
 #define TOT_SEGS   36      /* total number of segments in crystal */
 #define MAX_AGS    1000  /* CHANGEME max. no. of points in coarse grid for AGS */
 #define MAX_SEGS   8              /* max. number of segments to take in events */
@@ -93,7 +95,7 @@ typedef struct {
 typedef struct {
   char  iseg, ir, ip, iz;             /* integer cylindrical coordinates of grid point */
   float x, y, z;                      /* cartesian coordinates of grid point */
-  float signal[MAX_GRID_SEGS][50];        /* actual basis signals */
+  float signal[MAX_GRID_SEGS][MAX_TIME_STEPS];        /* actual basis signals */
   int   lo_time[MAX_GRID_SEGS], hi_time[MAX_GRID_SEGS];     /* limits for non-zero signal */
 } Basis_Point;
 
@@ -144,6 +146,8 @@ struct decomp_errcnt {
   int sumener;
   int badchisq;
 };
+
+
 
 #define EBUF_SIZE 3
 #define MAX_LINE_LEN 120

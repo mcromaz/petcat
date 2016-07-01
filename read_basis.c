@@ -1,13 +1,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdlib.h>
 
 #include "petcat.h"
 #include "wrap.h"
 
+typedef struct {
+  char  iseg, ir, ip, iz;             /* integer cylindrical coordinates of grid point */
+  float x, y, z;                      /* cartesian coordinates of grid point */
+  float signal[MAX_GRID_SEGS][50];        /* actual basis signals */
+  int   lo_time[MAX_GRID_SEGS], hi_time[MAX_GRID_SEGS];     /* limits for non-zero signal */
+} Basis_Point_50;
+
 int read_basis(char *basisfile)
 {
-/* routine to read decomposition basis signal files from 
+/* routine to read decomposition basis signal files from
    .dat unformatted binary file BASIS_FILE (defined in gdecomp.h)
    This file would normally have been created by
    the program convert_basis_sig2dat
@@ -20,14 +28,19 @@ int read_basis(char *basisfile)
    Author:  D.C. Radford    Aug 2004
 */
   char  header[256];
-  int   i, ii, j, t, s, nscanned;
+  int   i, ii, j, k, t, s, nscanned;
   int r,p,z;
   FILE  *file;
+  Basis_Point_50 *tmp;
+  Basis_Point *bpt;
+  int num;
   static int no_bad_segs[1] = {-1};
+
+  tmp = malloc(sizeof(Basis_Point_50));
 
   bad_segs = no_bad_segs;
   /* if (set_bad_segs()) bad_segs = no_bad_segs; */
-  
+
   if (basis) free(basis);
 
 
@@ -38,7 +51,7 @@ int read_basis(char *basisfile)
   }
 
   fread(header, 256, 1, file);
-   nscanned = sscanf(header,  
+   nscanned = sscanf(header,
           "GRETA basis signals; Cylindrical; version 1.2\n"
           "%d basis point, %d grid segments, %d time steps\n"
           "grid_pos_lu_rpz SRAD SPHI SZ: %d %d %d\n",
@@ -50,9 +63,15 @@ int read_basis(char *basisfile)
       return 1;
    }
    /* Note that GRID SEGS is not truly variable. If it must be, then the basis
-      read will have to expanded similarly (but with more complexity) to the 
+      read will have to expanded similarly (but with more complexity) to the
       lookup table read.
     */
+
+#ifdef SAMPLE25
+  printf("*** SAMPLE25 defined ***\n");
+  TIME_STEPS = 25; // redefine value in basis header
+#endif
+
    if (GRID_PTS > MAX_GRID_PTS || GRID_SEGS != MAX_GRID_SEGS ||
        TIME_STEPS > MAX_TIME_STEPS || SRAD > MAX_SRAD ||
        SPHI > MAX_SPHI || SZZZ > MAX_SZZZ) {
@@ -68,19 +87,48 @@ int read_basis(char *basisfile)
    }
 
    /* read basis itself */
+#ifdef SAMPLE25
+    /* read to intermediate 50 sample basis point and compress */
+    for (i = 0; i < GRID_PTS; i++) {
+      num = fread(tmp, sizeof(Basis_Point_50), 1, file);
+      if (num != 1) {
+        printf("Something's wrong with the basis data file!\n");
+        fclose(file);
+        return 1;
+      }
+      bpt = basis + i;
+      memset(bpt, 0, sizeof(Basis_Point));
+      bpt->iseg = tmp->iseg;
+      bpt->ir = tmp->ir;
+      bpt->ip = tmp->ip;
+      bpt->iz = tmp->iz;
+      bpt->x = tmp->x;
+      bpt->y = tmp->y;
+      bpt->z = tmp->z;
+      for (j = 0; j < MAX_GRID_SEGS; j++) {
+        bpt->lo_time[j] = tmp->lo_time[j] / 2;
+        bpt->hi_time[j] = tmp->hi_time[j] / 2;
+        for (k = 0; k < 25; k++) {
+          bpt->signal[j][k] = (tmp->signal[j][2 * k] + tmp->signal[j][2 * k + 1]) / 2;
+      }
+    }
+  }
+#else
     if (fread(basis, sizeof(Basis_Point), GRID_PTS, file) != GRID_PTS) {
     /* something's wrong */
     printf("Something's wrong with the basis data file!\n");
     fclose(file);
     return 1;
   }
+#endif
+
   /* read lookup table  */
   for (s = 0; s < SSEG; s++) {
      for (r = 0; r < SRAD; r++) {
          for (p = 0; p < SPHI; p++) {
             for (z = 0; z < SZZZ; z++ ) {
                 if (fread(&grid_pos_lu[s][r][p][z],sizeof(int),1,file)!=1) {
-                   printf("Error reading lookup table at %d %d %d %d\n", 
+                   printf("Error reading lookup table at %d %d %d %d\n",
                                 s, r, p, z);
                    fclose(file);
                    return 1;

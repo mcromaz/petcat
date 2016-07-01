@@ -64,7 +64,7 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
    int  x, v, e_0, e_1, t0, i, j, k;  /* remne e0, e1 to e_0, e_1 to not conflict w inl globals */
    int ener_cc, unshifted_ener_cc;
    int num_net, segs[36], net2[36][36];
-   int locn, vec, ch, id, slot, *a;
+   int locn, vec, ch, id, slot, *a, *b, *cur_tr_0, *saveref;
    float cal_ener_cc, fact, cc_avg;
    int ie, endofbuffer;
    int recordlen;
@@ -232,6 +232,21 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
     // printf("ener_cc = %d, cal_ener_cc = %f\n", ener_cc, cal_ener_cc);
     /* pp34 ignored in code */
     /* pp36 */
+
+    #ifdef SAMPLE25
+    cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
+    for (i = 0; i < 37; i++) {
+      a = cur_tr + i * tr_len;
+      b = cur_tr_0 + i * tr_len / 2;
+      for (j = 0; j < tr_len / 2; j++) {
+        b[i] = (a[2 * i] + a[2 * i + 1]) / 2;
+      }
+    }
+    saveref = cur_tr;
+    cur_tr = cur_tr_0;  // cur_tr now points to compressed traces
+    tr_len /= 2;
+    #endif
+
     for (i = 0, num_net = 0; i < TOT_SEGS; i++) {
       /* pp43   */
       a = cur_tr + i *tr_len;
@@ -414,6 +429,12 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
      /* pp87 */
      event->time = tlast;
      //printf("--- returned 0\n");
+
+     #ifdef SAMPLE25
+     cur_tr = saveref; // restore cur_tr to full buffer
+     free(cur_tr_0);
+     #endif
+
      return 0;
    }
 /*
@@ -456,7 +477,7 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
    int ti;
 
    int inlid;
-
+   FILE *ftmp;
    /* DO I NEED TO DO THIS? */
    /*   printf("secondary init of preProcess()\n");
    num_xtal_evts = 0;
@@ -468,6 +489,25 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
    ebuf = Calloc(40 * evt_len, sizeof(short));
    ener_sp = Calloc(37 * 4096, sizeof(int)); */
    tr_len = 286;
+   #ifdef SAMPLE25
+   for (i = 0; i < 37; i++) {  // compress trace to 1/2 length by summing
+     for (j = 0; j < tr_len / 2; j++) {
+       mario->wf[i][j] = (mario->wf[i][2 * j] + mario->wf[i][2 * j + 1]) / 2;
+     }
+     for (j = tr_len / 2; j < tr_len; j++) {
+       mario->wf[i][j] = 0;
+     }
+   }
+   tr_len /= 2;
+   #endif
+
+/*
+   ftmp = fopen("tr15.csv", "w");
+   for (i = 0; i < tr_len; i++) {
+     fprintf(ftmp, "%d,%d\n", i, mario->wf[15][i]);
+   }
+   exit(1);
+*/
    cur_tr = Calloc(37 * tr_len, sizeof(int));
 
    diagcnt->numMode3Evts++;
@@ -487,6 +527,12 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
      }
      adjoff(a, tr_len);
      ti = time_sef(a, tr_len);
+     /*
+     if (i == 15) {
+     printf("ti = %d\n", ti);
+     exit(1);
+     }
+     */
      if (!net(a, tr_len)  || (ti < ((int) (0.1 * tr_len))) || (ti > ((int) (0.9 * tr_len)))) {	/* MC - hack for high rate,
 												   ext rigger in BGS runs */
        nonet[i] = 1;	/* mark segment with no net so segment energy can be zeroed later  */
@@ -524,6 +570,8 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
 
    num_net1++;
    t0 = align_cfd_1(cur_tr, tr_len, delay1, delay0);
+   printf("t0=%d, num_net=%d %d %d\n", t0, num_net, segs[0], segs[1]);
+   //exit(1);
    num_aligned++;
    fact = ((float)x)/3.3639; /* TODO: this depends on integration time! */
 
@@ -561,7 +609,13 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
    for (k = 0; k < 4; k++) {
      event->core_e[k] = cal_ener_cc;
    }
-
+/*
+      ftmp = fopen("tr15post.csv", "w");
+      for (i = 0; i < TIME_STEPS; i++) {
+        fprintf(ftmp, "%d,%f\n", i, event->signal[15][i]);
+      }
+      exit(1);
+*/
    /* pp87 */
    //event->time = tlast;
    return 1;

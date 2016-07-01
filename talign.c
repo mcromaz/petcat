@@ -6,17 +6,27 @@
 
 int time_sef(int *tr, int len) {		/* from DecompIF.c */
 	/* return index at which short energy filter has max value */
-	
+
 	int s1, s2, s3, s4;
-	int i, max, max_i; 
+	int i, max, max_i;
+	#ifdef SAMPLE25
+	static int PU_RISE = 20;	/* rise time, flat top parameters for energy filter */
+	static int PU_FLAT = 10;
+	#else
 	static int PU_RISE = 40;	/* rise time, flat top parameters for energy filter */
 	static int PU_FLAT = 20;
+	#endif
 	int MIN_T, MAX_T;
 	static int dd[1024];
-	
+
+  #ifdef SAMPLE25
+	MIN_T = 20.0;
+	MAX_T = len - 20.0;
+  #else
 	MIN_T = 40.0;
 	MAX_T = len - 40.0;
-	
+	#endif
+
 	/* sums for derivative / pileup check */
 	s1 = s2 = 0.0;
   s3 = 0;
@@ -43,14 +53,14 @@ int time_sef(int *tr, int len) {		/* from DecompIF.c */
 	max = -1.0;
 	max_i = -1;
   for (i = MIN_T; i <= MAX_T - (2*PU_RISE+PU_FLAT); i++) {
-    s4 = abs(s2 - dd[i]);		/* variation of derivitive from avg */ 
+    s4 = abs(s2 - dd[i]);		/* variation of derivitive from avg */
     if (max < s4) {
 	    max = s4;
 			max_i = i;
 	  }
   }
 	return max_i;
-} 
+}
 
 float t_cfd(int *buf, int buf_len)
 {
@@ -58,7 +68,7 @@ float t_cfd(int *buf, int buf_len)
      buf = signal trace (input)
      returns CFD time as a float, in time steps, or -1.0 on error */
 
-  int deriv[MAX_TRACE_LEN]; 
+  int deriv[MAX_TRACE_LEN];
   int cfd[MAX_TRACE_LEN];
   int i, imax = 0, max_deriv = 0;
 
@@ -120,7 +130,7 @@ int align_cfd_1(int *traces, int tr_len, float *delay1, float *delay0)
       }
     }
   }
-  t += 4.0f;
+  //t += 4.0f;
   if (n > 0 ) {
     t += s0 / ((float) n);  // correct for mean delay0
   } else {
@@ -138,7 +148,8 @@ int align_cfd_1(int *traces, int tr_len, float *delay1, float *delay0)
     /* do the interpolating and shifting of the traces */
     it = tt;             // integer shift
     tt -= (float) it;    // fractional shift for interpolation
-    for (k=0; k<50; k++) {  // do the shift & interpolate
+    //for (k=0; k<50; k++) {  // do the shift & interpolate
+    for (k=0; k<TIME_STEPS; k++) {  // do the shift & interpolate
       traces[j * tr_len + k] = (1.0f - tt) * traces[j * tr_len + k + it] + tt * traces[j * tr_len + k + it + 1];
     }
   }

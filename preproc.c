@@ -251,6 +251,10 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
       num_net++;
     }
 
+    /* pp42 */
+    a = cur_tr + i * tr_len;
+    get.tr(a, tr_len, 0, ebuf + evt_len *i +2);
+
     #ifdef SAMPLE25
     cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
     for (i = 0; i < 37; i++) {

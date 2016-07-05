@@ -255,7 +255,7 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
     a = cur_tr + i * tr_len;
     get.tr(a, tr_len, 0, ebuf + evt_len *i +2);
     adjoff(a, tr_len);
-    
+
     #ifdef SAMPLE25
     cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
     for (i = 0; i < 37; i++) {
@@ -660,7 +660,7 @@ int startPreProcess(int evt_len, char *detMapFilename, char *filterFilename, cha
   }
   num = read_param(xTalkParsFilename, "delay0", delay0, TOT_SEGS);
   if (num <  0) {
-    fprintf(stderr, "error: cannot read delay0 from %s\n", xTalkParsFilename);
+    fprintf(stderr, "error: cannot read /read_para0 from %s\n", xTalkParsFilename);
     return -1;
   }
   /* subtract mean value of delay0 from individual values */
@@ -679,6 +679,13 @@ int startPreProcess(int evt_len, char *detMapFilename, char *filterFilename, cha
   }
   delay0[36] = delay1[36] = 0.0;
 
+  #ifdef SAMPLE25
+  for (i = 0; i < 36; i++) {
+    delay0[i] /= 2.;
+    delay1[i] /= 2.;
+  }
+  #endif
+  
   /* init arrays for inl */
   /* if(WITHINL) { */
   /*   for (i = 0; i < 1120; i++){ */

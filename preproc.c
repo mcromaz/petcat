@@ -352,6 +352,7 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
          diagcnt->pp58++;
          #ifdef SAMPLE25
          cur_tr = saveref; // restore cur_tr to full buffer
+         tr_len *= 2;
          free(cur_tr_0);
          #endif
          continue; /* up to pp2 */
@@ -439,6 +440,7 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
 
      #ifdef SAMPLE25
      cur_tr = saveref; // restore cur_tr to full buffer
+     tr_len *= 2;
      free(cur_tr_0);
      #endif
 
@@ -685,7 +687,7 @@ int startPreProcess(int evt_len, char *detMapFilename, char *filterFilename, cha
     delay1[i] /= 2.;
   }
   #endif
-  
+
   /* init arrays for inl */
   /* if(WITHINL) { */
   /*   for (i = 0; i < 1120; i++){ */

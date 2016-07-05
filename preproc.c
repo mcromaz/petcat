@@ -261,17 +261,13 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
       a = cur_tr + i * tr_len;
       b = cur_tr_0 + i * tr_len / 2;
       for (j = 0; j < tr_len / 2; j++) {
-        b[i] = (a[2 * i] + a[2 * i + 1]) / 2;
+        b[j] = (a[2 * j] + a[2 * j + 1]) / 2;
       }
     }
     saveref = cur_tr;
     cur_tr = cur_tr_0;  // cur_tr now points to compressed traces
     tr_len /= 2;
     #endif
-
-    /* pp42 */
-    a = cur_tr + i * tr_len;
-    get.tr(a, tr_len, 0, ebuf + evt_len *i +2);
 
     prestep = 0;
     poststep = 0;

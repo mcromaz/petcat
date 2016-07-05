@@ -254,7 +254,8 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
     /* pp42 */
     a = cur_tr + i * tr_len;
     get.tr(a, tr_len, 0, ebuf + evt_len *i +2);
-
+    adjoff(a, tr_len);
+    
     #ifdef SAMPLE25
     cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
     for (i = 0; i < 37; i++) {
@@ -326,7 +327,7 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
 	( ((double) ener_cc) + drand48() - 0.5);
     }
 
-    adjoff(a, tr_len);
+
     /* pp47 */
     x = ener_cc;
     if (x >= fltr->xmin && x <= fltr->xmax && num_net == 2) {

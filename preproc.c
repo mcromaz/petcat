@@ -349,6 +349,10 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
          //printf("bailed at pp58\n");
          //printf("cal_ener_cc = %f, fltr->emin = %f, fltr->emax = %f\n", cal_ener_cc, fltr->emin, fltr->emax);
          diagcnt->pp58++;
+         #ifdef SAMPLE25
+         cur_tr = saveref; // restore cur_tr to full buffer
+         free(cur_tr_0);
+         #endif
          continue; /* up to pp2 */
       }
       /* pp59 */

@@ -114,7 +114,8 @@ int main(int argc, char **argv) {
 
   buf = Calloc(OBUF_LEN, sizeof(unsigned short int));
 
-  inclevtlen = 286; //get_evt_len(fin);
+  //inclevtlen = 286; 
+  inclevtlen = get_evt_len(fin);
   fprintf(stdout, "inclevtlen = %d (in short ints) for %s \n", inclevtlen, inputFile);
 
   stat = startPreProcess(inclevtlen, detMapFile, filterFile, trGainFile, xTalkParsFile);

@@ -233,20 +233,6 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
     /* pp34 ignored in code */
     /* pp36 */
 
-    #ifdef SAMPLE25
-    cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
-    for (i = 0; i < 37; i++) {
-      a = cur_tr + i * tr_len;
-      b = cur_tr_0 + i * tr_len / 2;
-      for (j = 0; j < tr_len / 2; j++) {
-        b[i] = (a[2 * i] + a[2 * i + 1]) / 2;
-      }
-    }
-    saveref = cur_tr;
-    cur_tr = cur_tr_0;  // cur_tr now points to compressed traces
-    tr_len /= 2;
-    #endif
-
     for (i = 0, num_net = 0; i < TOT_SEGS; i++) {
       /* pp43   */
       a = cur_tr + i *tr_len;
@@ -264,6 +250,21 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
       segs[num_net] = i;
       num_net++;
     }
+
+    #ifdef SAMPLE25
+    cur_tr_0 = Calloc(37 * (tr_len / 2), sizeof(int));
+    for (i = 0; i < 37; i++) {
+      a = cur_tr + i * tr_len;
+      b = cur_tr_0 + i * tr_len / 2;
+      for (j = 0; j < tr_len / 2; j++) {
+        b[i] = (a[2 * i] + a[2 * i + 1]) / 2;
+      }
+    }
+    saveref = cur_tr;
+    cur_tr = cur_tr_0;  // cur_tr now points to compressed traces
+    tr_len /= 2;
+    #endif
+
     /* pp42 */
     a = cur_tr + i * tr_len;
     get.tr(a, tr_len, 0, ebuf + evt_len *i +2);
@@ -380,10 +381,11 @@ int preProcess(unsigned short int *sbuf, int inlentotal, int evt_len, Event_Sign
       /* pp89 */
       for (i = 0;  i < TOT_SEGS; i++) {
          /* pp71 */
+         /* cc_avg not used ..
          for (v=45,cc_avg=0; v < 50; v++) {
-            /* pp70 */
             cc_avg += (float) (*(cur_tr + 36 * tr_len + v));
          }
+         */
          /* pp72 */
          segei = segevt_ener(ebuf + evt_len * i, 7);	/* MC randomize float conversion */
          event->seg_energy[i]  = a0[i] + a1[i] * ((double) segei);
@@ -570,7 +572,7 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
 
    num_net1++;
    t0 = align_cfd_1(cur_tr, tr_len, delay1, delay0);
-   printf("t0=%d, num_net=%d %d %d\n", t0, num_net, segs[0], segs[1]);
+   //printf("t0=%d, num_net=%d %d %d\n", t0, num_net, segs[0], segs[1]);
    //exit(1);
    num_aligned++;
    fact = ((float)x)/3.3639; /* TODO: this depends on integration time! */
@@ -586,9 +588,11 @@ int preProcessMario(Mario *mario, Event_Signal *event, preprocCnt *diagcnt) {
    event->poststep = ((float) poststep) / 20.0;
 
    for (i = 0;  i < TOT_SEGS; i++) {
+     /* cc_avg not used
      for (v=45,cc_avg=0; v < 50; v++) {
        cc_avg += (float) (*(cur_tr + 36 * tr_len + v));
      }
+     */
 
      event->seg_energy[i]  = mario->segEnergy[i];
      if (nonet[i] == 1) { event->seg_energy[i] = 0.0; }
